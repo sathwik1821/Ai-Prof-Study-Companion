@@ -12,6 +12,11 @@
 
 🌐 **Live Application**: [https://ai-prof-study-companion.vercel.app](https://ai-prof-study-companion.vercel.app)
 
+📁 **Internship Project Submission Artifacts**:
+- 📘 [**System Architecture Documentation (PDF)**](./AiProf_Architecture_Documentation.pdf) — Comprehensive 3-tier architecture, component models, ER diagrams, security filter chains, and deployment topology.
+- 📙 [**AI Tools & Usage Documentation (PDF)**](./AiProf_AI_Tools_and_Usage_Documentation.pdf) — Transparent audit contrasting developer AI tools (Antigravity IDE) with production model features (Gemini Flash Lite & pgvector).
+- 📗 [**AI Prompts Used During Development (PDF)**](./AiProf_AI_Prompts_Used_During_Development.pdf) — Curated collection of 23 authentic engineering prompts organized across 10 lifecycle categories.
+
 ---
 
 ## 📑 Table of Contents

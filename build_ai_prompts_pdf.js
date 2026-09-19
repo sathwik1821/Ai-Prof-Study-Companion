@@ -1,0 +1,1114 @@
+const fs = require('fs');
+const path = require('path');
+const { execSync } = require('child_process');
+
+const htmlContent = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AiProf Study Companion — AI Prompts Used During Development</title>
+  <style>
+    @page {
+      size: A4 portrait;
+      margin: 13mm 13mm 13mm 13mm;
+      @bottom-right {
+        content: "Page " counter(page) " of " counter(pages);
+        font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+        font-size: 8pt;
+        color: #64748b;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+      color: #1e293b;
+      background-color: #ffffff;
+      line-height: 1.45;
+      font-size: 9pt;
+    }
+
+    .page-break {
+      page-break-before: always;
+      padding-top: 2px;
+    }
+
+    .avoid-break {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    /* Top Running Header */
+    .doc-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #6366f1;
+      padding-bottom: 5px;
+      margin-bottom: 12px;
+    }
+
+    .doc-header .brand {
+      font-size: 10.5pt;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -0.2px;
+    }
+
+    .doc-header .tag {
+      font-size: 7.5pt;
+      font-weight: 700;
+      color: #6366f1;
+      background: #eef2ff;
+      padding: 2px 7px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Cover / Hero Section */
+    .hero-banner {
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 55%, #312e81 100%);
+      color: #ffffff;
+      border-radius: 8px;
+      padding: 20px 22px 18px 22px;
+      margin-bottom: 12px;
+      box-shadow: 0 3px 10px rgba(15, 23, 42, 0.1);
+    }
+
+    .hero-banner .badge {
+      display: inline-block;
+      background: rgba(99, 102, 241, 0.25);
+      border: 1px solid rgba(165, 180, 252, 0.4);
+      color: #c7d2fe;
+      font-size: 7.5pt;
+      font-weight: 700;
+      padding: 2.5px 9px;
+      border-radius: 9999px;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
+    .hero-banner h1 {
+      font-size: 19pt;
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 5px;
+      letter-spacing: -0.3px;
+      color: #f8fafc;
+    }
+
+    .hero-banner .subtitle {
+      font-size: 9.2pt;
+      color: #cbd5e1;
+      margin-bottom: 12px;
+      font-weight: 400;
+      line-height: 1.38;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 5px;
+      padding: 8px 12px;
+    }
+
+    .meta-item .meta-label {
+      font-size: 6.8pt;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 1px;
+    }
+
+    .meta-item .meta-val {
+      font-size: 8pt;
+      font-weight: 600;
+      color: #f1f5f9;
+    }
+
+    /* Section Headings */
+    h2.category-title {
+      font-size: 11pt;
+      font-weight: 800;
+      color: #0f172a;
+      margin-top: 10px;
+      margin-bottom: 7px;
+      padding-bottom: 3px;
+      border-bottom: 1.5px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    h2.category-title .cat-badge {
+      font-size: 7.2pt;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 3px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    .badge-arch { background: #e0e7ff; color: #3730a3; }
+    .badge-front { background: #dbeafe; color: #1e40af; }
+    .badge-back { background: #dcfce7; color: #166534; }
+    .badge-db { background: #fef3c7; color: #92400e; }
+    .badge-ai { background: #f3e8ff; color: #6b21a8; }
+    .badge-sec { background: #fee2e2; color: #991b1b; }
+    .badge-debug { background: #ffedd5; color: #9a3412; }
+    .badge-test { background: #e0f2fe; color: #075985; }
+    .badge-deploy { background: #ecfdf5; color: #065f46; }
+    .badge-doc { background: #f1f5f9; color: #334155; }
+
+    /* Prompt Box Styling */
+    .prompt-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 9.5px 12px;
+      margin-bottom: 9px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+    }
+
+    .prompt-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 4px;
+    }
+
+    .prompt-num-title {
+      font-size: 9.2pt;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .prompt-cat-tag {
+      font-size: 7.2pt;
+      font-weight: 600;
+      color: #64748b;
+      background: #f1f5f9;
+      padding: 1px 5px;
+      border-radius: 3px;
+    }
+
+    .prompt-quote {
+      background: #f8fafc;
+      border-left: 3px solid #6366f1;
+      padding: 6.5px 9px;
+      border-radius: 0 4px 4px 0;
+      margin-bottom: 5.5px;
+      font-size: 8.3pt;
+      color: #1e293b;
+      font-family: 'Consolas', 'Menlo', 'Courier New', monospace;
+      line-height: 1.38;
+      word-break: break-word;
+      white-space: pre-wrap;
+    }
+
+    .prompt-quote.consolidated {
+      border-left-color: #f59e0b;
+    }
+
+    .prompt-label-badge {
+      display: inline-block;
+      font-family: 'Segoe UI', sans-serif;
+      font-size: 6.8pt;
+      font-weight: 700;
+      color: #b45309;
+      background: #fef3c7;
+      padding: 1px 4px;
+      border-radius: 3px;
+      margin-bottom: 3px;
+      text-transform: uppercase;
+    }
+
+    .prompt-details {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 3.5px;
+      font-size: 8.3pt;
+      line-height: 1.38;
+    }
+
+    .detail-row {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .detail-tag {
+      flex-shrink: 0;
+      width: 96px;
+      font-weight: 700;
+      font-size: 7.5pt;
+      color: #4338ca;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .detail-content {
+      color: #334155;
+      flex: 1;
+    }
+
+    /* Callout & Tables */
+    .callout {
+      background: #f8fafc;
+      border-left: 3.5px solid #6366f1;
+      padding: 9px 11px;
+      border-radius: 0 5px 5px 0;
+      margin-bottom: 10px;
+      font-size: 8.3pt;
+      line-height: 1.42;
+    }
+
+    table.matrix-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 7.6pt;
+      margin: 6px 0 8px 0;
+    }
+
+    table.matrix-table th {
+      background: #0f172a;
+      color: #ffffff;
+      padding: 5px 7px;
+      text-align: left;
+      font-weight: 700;
+      font-size: 7.2pt;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    table.matrix-table td {
+      padding: 4.5px 7px;
+      border-bottom: 1px solid #e2e8f0;
+      color: #334155;
+    }
+
+    table.matrix-table tr:nth-child(even) {
+      background: #f8fafc;
+    }
+
+    code {
+      background: #f1f5f9;
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-family: 'Consolas', 'Menlo', monospace;
+      font-size: 7.6pt;
+      color: #0f172a;
+    }
+
+    .redacted {
+      background: #fee2e2;
+      color: #991b1b;
+      font-weight: 600;
+      padding: 0 3px;
+      border-radius: 2px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==================== PAGE 1: COVER & OVERVIEW ==================== -->
+  <div class="doc-header">
+    <div class="brand">AiProf Study Companion • AI Prompts Used During Development</div>
+    <div class="tag">Engineering Submission Document</div>
+  </div>
+
+  <!-- HERO COVER -->
+  <div class="hero-banner">
+    <div class="badge">Full Stack AI Engineer Intern Project Submission</div>
+    <h1>AI Prompts Used During Development</h1>
+    <div class="subtitle">
+      A curated, transparent collection of materially significant engineering prompts used with AI development tools to build, debug, test, secure, and deploy the AiProf full-stack platform.
+    </div>
+    <div class="meta-grid">
+      <div class="meta-item">
+        <div class="meta-label">Developer</div>
+        <div class="meta-val">Sathwik Bodakunta</div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">Project</div>
+        <div class="meta-val">AiProf Study Companion</div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">Production URL</div>
+        <div class="meta-val">ai-prof-study-companion.vercel.app</div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">Repository</div>
+        <div class="meta-val">github.com/sathwik1821/Ai-Prof-Study-Companion</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INTRODUCTION & METHODOLOGY -->
+  <div class="callout">
+    <strong style="color: #0f172a; font-size: 8.8pt;">Document Objective & Authenticity Policy</strong><br>
+    This document presents a <strong>curated selection of the most materially significant prompts used during the development</strong> of the AiProf Study Companion, drawn directly from the actual chronological development logs recorded by the Google Antigravity AI IDE engine. It is not an unedited raw transcript of every minor syntax lookup or repetitive query. Instead, it documents key engineering moments where AI interaction shaped system architecture, resolved production runtime faults, enforced enterprise security protocols, calibrated vector search algorithms, and finalized cloud deployments.
+    <br><br>
+    <strong>Accuracy & Confidentiality Standards:</strong>
+    All prompts reflect the developer's authentic phrasing during the engineering sessions. No prompts have been fabricated or artificially inflated. Where multiple contiguous messages formed a single cohesive engineering request, they are clearly labeled as <em>Consolidated from development conversation</em>. All sensitive production secrets, API tokens, and personal email addresses have been securely replaced with <code>[REDACTED SECRET]</code> or <code>[REDACTED EMAIL]</code>.
+  </div>
+
+  <!-- CATEGORY SUMMARY MATRIX -->
+  <div class="avoid-break">
+    <div style="font-size: 8.8pt; font-weight: 700; color: #0f172a; margin-bottom: 2px;">Development Category Coverage Matrix</div>
+    <table class="matrix-table">
+      <thead>
+        <tr>
+          <th style="width: 26%;">Category</th>
+          <th style="width: 13%;">Prompt Count</th>
+          <th style="width: 36%;">Key Engineering Scope</th>
+          <th style="width: 25%;">Technologies Impacted</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>1. Architecture & System Design</strong></td>
+          <td>2 Prompts</td>
+          <td>3-tier cloud deployment topology & evaluation rubric feature audit</td>
+          <td>Vercel, Render, Neon, Spring Boot, React 19</td>
+        </tr>
+        <tr>
+          <td><strong>2. Frontend Development</strong></td>
+          <td>3 Prompts</td>
+          <td>Space/Project metadata edit modals, sidebar UX, Targeted Mastery cards</td>
+          <td>React 19, Lucide Icons, Vanilla CSS Grid</td>
+        </tr>
+        <tr>
+          <td><strong>3. Backend Development</strong></td>
+          <td>2 Prompts</td>
+          <td>Role-based access control (RBAC: USER vs ADMIN), admin telemetry guards</td>
+          <td>Spring Security 6.4, JWT Filter, Spring Data JPA</td>
+        </tr>
+        <tr>
+          <td><strong>4. Database</strong></td>
+          <td>2 Prompts</td>
+          <td>Neon PostgreSQL 16 setup, pgvector 3072d index, cascade deletion SQL</td>
+          <td>Neon Serverless, pgvector, Flyway, Hibernate</td>
+        </tr>
+        <tr>
+          <td><strong>5. AI / LLM Features</strong></td>
+          <td>2 Prompts</td>
+          <td>Dynamic concept mastery algorithm, Empty Materials RAG guard gate</td>
+          <td>Gemini Flash Lite, Gemini Embeddings, pgvector</td>
+        </tr>
+        <tr>
+          <td><strong>6. Authentication & Security</strong></td>
+          <td>2 Prompts</td>
+          <td>Google OAuth 2.0 Identity Services, 6-digit email OTP verification gate</td>
+          <td>Google ID Token Verifier, Resend API, BCrypt</td>
+        </tr>
+        <tr>
+          <td><strong>7. Debugging & Problem Solving</strong></td>
+          <td>3 Prompts</td>
+          <td>OAuth Error 400 origin mismatch, SMTP port 587 block, React Error #310</td>
+          <td>Google Cloud Console, Resend REST, React Hooks</td>
+        </tr>
+        <tr>
+          <td><strong>8. Testing & Validation</strong></td>
+          <td>2 Prompts</td>
+          <td>End-to-end vector pipeline validation, live production DOM browser audit</td>
+          <td>Chrome Headless, JUnit 5, Browser Subagent</td>
+        </tr>
+        <tr>
+          <td><strong>9. Deployment & Configuration</strong></td>
+          <td>2 Prompts</td>
+          <td>Production OAuth origin sync, Vercel Deployment Protection bypass</td>
+          <td>Vercel CLI, Render Docker, GitHub CI/CD</td>
+        </tr>
+        <tr>
+          <td><strong>10. Documentation</strong></td>
+          <td>3 Prompts</td>
+          <td>Public submission README, Architecture PDF, AI Tools & Usage PDF</td>
+          <td>Markdown, Headless Chrome Engine, Node.js</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ==================== PAGE 2: ARCHITECTURE & FRONTEND ==================== -->
+  <div class="page-break"></div>
+  <div class="doc-header">
+    <div class="brand">AiProf Study Companion • Categories 1 & 2: Architecture & Frontend</div>
+    <div class="tag">Engineering Prompts</div>
+  </div>
+
+  <h2 class="category-title">
+    <span>1. Architecture & System Design</span>
+    <span class="cat-badge badge-arch">Architecture</span>
+  </h2>
+
+  <!-- PROMPT 1 -->
+  <div class="prompt-card avoid-break">
+    <div class="prompt-header">
+      <div class="prompt-num-title">Prompt 01 — Full 3-Tier Cloud Deployment Architecture Strategy</div>
+      <div class="prompt-cat-tag">Architecture & System Design</div>
+    </div>
+    <div class="prompt-quote">"explain whole deployement step by step iam a beggineer lets move as i say i completed this"</div>
+    <div class="prompt-details">
+      <div class="detail-row">
+        <span class="detail-tag">Purpose:</span>
+        <span class="detail-content">Establish the overarching cloud deployment topology and decoupled multi-tier hosting strategy for the full-stack system from day one.</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-tag">Contribution:</span>
+        <span class="detail-content">Formulated an incremental rollout plan decoupling the React 19 SPA (Vercel edge hosting), Spring Boot 3 containerized API (Render Docker environment), managed PostgreSQL with pgvector (Neon Serverless), and Google Gemini Flash Lite LLM integration.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROMPT 2 -->
+  <div class="prompt-card avoid-break">
+    <div class="prompt-header">
+      <div class="prompt-num-title">Prompt 02 — Comprehensive Architectural & Feature Audit Against Rubric</div>
+      <div class="prompt-cat-tag">Architecture & System Design</div>
+    </div>
+    <div class="prompt-quote">"according to this what features we covered and what not and if all covered we will move on to the next thing documentation and demo creation i will say so so dont start anything now itself(documentation)"</div>
+    <div class="prompt-details">
+      <div class="detail-row">
+        <span class="detail-tag">Purpose:</span>
+        <span class="detail-content">Conduct a rigorous gap analysis of implemented system capabilities against the internship evaluation criteria before freezing the application code.</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-tag">Contribution:</span>
+        <span class="detail-content">Systematically mapped the current codebase against evaluation requirements (RAG accuracy, Socratic tutoring, token efficiency, RBAC, analytics), identifying that while core AI features were complete, Google OAuth and email OTP authentication needed strengthening before final documentation.</span>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="category-title" style="margin-top: 8px;">
+    <span>2. Frontend Development</span>
+    <span class="cat-badge badge-front">Frontend</span>
+  </h2>
+
+  <!-- PROMPT 3 -->
+  <div class="prompt-card avoid-break">
+    <div class="prompt-header">
+      <div class="prompt-num-title">Prompt 03 — Space & Project Metadata Editing Capability</div>
+      <div class="prompt-cat-tag">Frontend Development</div>
+    </div>
+    <div class="prompt-quote">"also add the ability to change the space project name descriptions"</div>
+    <div class="prompt-details">
+      <div class="detail-row">
+        <span class="detail-tag">Purpose:</span>
+        <span class="detail-content">Enable students to dynamically edit and update names and descriptions for workspaces and study projects directly from the user interface.</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-tag">Contribution:</span>
+        <span class="detail-content">Implemented interactive modal dialogs and state update handlers in <code>WorkspaceView.jsx</code> and <code>ProjectView.jsx</code>, providing optimistic UI updates backed by Spring Boot REST API synchronization.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROMPT 4 -->
+  <div class="prompt-card avoid-break">
+    <div class="prompt-header">
+      <div class="prompt-num-title">Prompt 04 — Streamlining Navigation & Profile Sidebar UX</div>
+      <div class="prompt-cat-tag">Frontend Development</div>
+    </div>
+    <div class="prompt-quote">"i think there is no need of adding section for proofile in the side bar as we can acess it right from the below where name is shown"</div>
+    <div class="prompt-details">
+      <div class="detail-row">
+        <span class="detail-tag">Purpose:</span>
+        <span class="detail-content">Optimize sidebar navigation ergonomics by eliminating redundant menu items and consolidating user account settings into the bottom user identity drawer.</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-tag">Contribution:</span>
+        <span class="detail-content">Refactored <code>Sidebar.jsx</code> to maximize vertical space for study spaces and recent projects, shifting user profile management and logout actions into an accessible footer popover card.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROMPT 5 -->
+  <div class="prompt-card avoid-break">
+    <div class="prompt-header">
+      <div class="prompt-num-title">Prompt 05 — Dashboard Layout Restructuring for Targeted Mastery</div>
+      <div class="prompt-cat-tag">Frontend Development</div>
+    </div>
+    <div class="prompt-quote">"remove setup guide completely and add the recommneded thing(targeted mastery u added in the anlaytics) right next to the continue in the dasboard"</div>
+    <div class="prompt-details">
+      <div class="detail-row">
+        <span class="detail-tag">Purpose:</span>
+        <span class="detail-content">Retire static onboarding checklist UI elements and position high-impact AI recommendations directly adjacent to the primary study resumption action.</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-tag">Contribution:</span>
+        <span class="detail-content">Redesigned <code>DashboardPage.jsx</code> CSS grid layout, removing the static setup guide and introducing the dynamic Targeted Mastery recommendation card displaying the user's lowest-scoring concept with quick-launch practice buttons.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== PAGE 3: BACKEND & DATABASE ==================== -->
+  <div class="page-break"></div>
+  <div class="doc-header">
+    <div class="brand">AiProf Study Companion • Categories 3 & 4: Backend & Database</div>
+    <div class="tag">Engineering Prompts</div>
+  </div>
+
+  <h2 class="category-title">
+    <span>3. Backend Development</span>
+    <span class="cat-badge badge-back">Backend</span>
+  </h2>
+
+  <!-- PROMPT 6 -->
+  <div class="prompt-card avoid-break" style="padding: 12px 14px; margin-bottom: 12px;">
+    <div class="prompt-header">
+      <div class="prompt-num-title" style="font-size: 9.5pt;">Prompt 06 — Enforcing Strict Role-Based Access Control (RBAC)</div>
+      <div class="prompt-cat-tag">Backend Development</div>
+    </div>
+    <div class="prompt-quote" style="font-size: 8.5pt; padding: 8px 10px; margin-bottom: 8px;">"lets perform what u have added one after another and the first thing to do is now there is no seperation between normal user and the admin ie everyone is an admin correct it first"</div>
+    <div class="prompt-details" style="gap: 5px; font-size: 8.5pt;">
+      <div class="detail-row">
+        <span class="detail-tag">Purpose:</span>
+        <span class="detail-content">Eliminate privilege escalation by establishing clear role boundaries between standard student accounts (<code>ROLE_USER</code>) and administrative accounts (<code>ROLE_ADMIN</code>).</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-tag">Contribution:</span>
+        <span class="detail-content">Updated Spring Security filter chain configurations, refactored <code>User</code> entity role assignment logic to default new registrants to <code>ROLE_USER</code>, and introduced database-backed role verification.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROMPT 7 -->
+  <div class="prompt-card avoid-break" style="padding: 12px 14px; margin-bottom: 12px;">
+    <div class="prompt-header">
+      <div class="prompt-num-title" style="font-size: 9.5pt;">Prompt 07 — Guarding Administrative Telemetry & API Endpoints</div>
+      <div class="prompt-cat-tag">Backend Development</div>
+    </div>
+    <div class="prompt-quote" style="font-size: 8.5pt; padding: 8px 10px; margin-bottom: 8px;">"the thing in this is other account has admin tab but all the details are set to 0"</div>
+    <div class="prompt-details" style="gap: 5px; font-size: 8.5pt;">
+      <div class="detail-row">
+        <span class="detail-tag">Purpose:</span>
+        <span class="detail-content">Resolve a security and UX issue where non-admin accounts could view the admin navigation tab with empty counters rather than having access properly restricted.</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-tag">Contribution:</span>
+        <span class="detail-content">Applied <code>@PreAuthorize("hasRole('ADMIN')")</code> annotations across <code>AdminController.java</code>, updated the JWT principal claims extractor, and conditionally hidden admin navigation elements in the frontend based on authenticated user authorities.</span>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="category-title" style="margin-top: 14px;">
+    <span>4. Database</span>
+    <span class="cat-badge badge-db">Database</span>
+  </h2>
+
+  <!-- PROMPT 8 -->
+  <div class="prompt-card avoid-break" style="padding: 12px 14px; margin-bottom: 12px;">
+    <div class="prompt-header">
+      <div class="prompt-num-title" style="font-size: 9.5pt;">Prompt 08 — Cloud PostgreSQL Provisioning & pgvector Configuration</div>
+      <div class="prompt-cat-tag">Database</div>
+    </div>
+    <div class="prompt-quote consolidated" style="font-size: 8.5pt; padding: 8px 10px; margin-bottom: 8px;"><span class="prompt-label-badge">Consolidated from development conversation</span>
+"before pg vector we have to do for our main db right"
+[Followed by Neon CLI project setup instructions: neon link --project-id dry-mouse-00052621 --branch production, connection string configuration, and pgvector extension verification]</div>
+    <div class="prompt-details" style="gap: 5px; font-size: 8.5pt;">
+      <div class="detail-row">
+        <span class="detail-tag">Purpose:</span>
+        <span class="detail-content">Provision a serverless PostgreSQL 16 instance on Neon, configure connection pooling with SSL, and initialize the pgvector extension for high-dimensional vector search.</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-tag">Contribution:</span>
+        <span class="detail-content">Established secure pooled database connectivity in <code>application.yml</code> (<code>sslmode=require</code>), executed Flyway migration <code>V1__init.sql</code> with <code>CREATE EXTENSION IF NOT EXISTS vector;</code>, and defined the 3072-dimension <code>vector(3072)</code> column for document embeddings.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROMPT 9 -->
+  <div class="prompt-card avoid-break" style="padding: 12px 14px; margin-bottom: 12px;">
+    <div class="prompt-header">
+      <div class="prompt-num-title" style="font-size: 9.5pt;">Prompt 09 — Database User Cleanup & Cascade Deletion Inspection</div>
+      <div class="prompt-cat-tag">Database</div>
+    </div>
+    <div class="prompt-quote" style="font-size: 8.5pt; padding: 8px 10px; margin-bottom: 8px;">"give the neon db query to delete the user with the email <span class="redacted">[REDACTED EMAIL]</span>"</div>
+    <div class="prompt-details" style="gap: 5px; font-size: 8.5pt;">
+      <div class="detail-row">
+        <span class="detail-tag">Purpose:</span>
+        <span class="detail-content">Clean up test user records from the production database and verify foreign key constraint cascade behaviors across spaces, documents, and chat sessions.</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-tag">Contribution:</span>
+        <span class="detail-content">Provided parameterized SQL queries with safe transactional deletion ordering, verifying that child entities (<code>user_roles</code>, <code>spaces</code>, <code>projects</code>, <code>study_materials</code>, <code>document_chunks</code>, <code>chat_sessions</code>) cleanly cascaded without orphaned records.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== PAGE 4: AI & AUTHENTICATION ==================== -->
+  <div class="page-break"></div>
+  <div class="doc-header">
+    <div class="brand">AiProf Study Companion • Categories 5 & 6: AI Features & Authentication</div>
+    <div class="tag">Engineering Prompts</div>
+  </div>
+
+  <h2 class="category-title">
+    <span>5. AI / LLM Features</span>
+    <span class="cat-badge badge-ai">AI / LLM Features</span>
+  </h2>
+
+  <!-- PROMPT 10 -->
+  <div class="prompt-card avoid-break" style="padding: 12px 14px; margin-bottom: 12px;">
+    <div class="prompt-header">
+      <div class="prompt-num-title" style="font-size: 9.5pt;">Prompt 10 — Dynamic Concept Mastery Scoring Algorithm</div>
+      <div class="prompt-cat-tag">AI / LLM Features</div>
+    </div>
+    <div class="prompt-quote" style="font-size: 8.5pt; padding: 8px 10px; margin-bottom: 8px;">"another issue is when i create a new space and project it auotmaticallly has 35 percentage and the whole project is diving into 3 Spring AI Fundamentals Core definitions, terminology, and key foundational principles... what could be the better way to handle this"</div>
+    <div class="prompt-details" style="gap: 5px; font-size: 8.5pt;">
+      <div class="detail-row">
+        <span class="detail-tag">Purpose:</span>
+        <span class="detail-content">Replace hardcoded static concept percentages with an adaptive, data-driven mastery tracking model reflecting real student assessment outcomes.</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-tag">Contribution:</span>
+        <span class="detail-content">Designed and implemented a dynamic calculation engine in <code>AnalyticsService.java</code> and <code>WorkspaceService.java</code> that evaluates quiz attempt scores, frequency of tutor inquiries, and concept difficulty weighting to compute genuine mastery percentages (0–100%).</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROMPT 11 -->
+  <div class="prompt-card avoid-break" style="padding: 12px 14px; margin-bottom: 12px;">
+    <div class="prompt-header">
+      <div class="prompt-num-title" style="font-size: 9.5pt;">Prompt 11 — Grounded RAG Empty Materials Gate</div>
+      <div class="prompt-cat-tag">AI / LLM Features</div>
+    </div>
+    <div class="prompt-quote" style="font-size: 8.5pt; padding: 8px 10px; margin-bottom: 8px;">"quiz and tutor ask to upload doc if there is no single document uploaded in the project
+add the my spaces on to the side bar remove it from the dashbaord"</div>
+    <div class="prompt-details" style="gap: 5px; font-size: 8.5pt;">
+      <div class="detail-row">
+        <span class="detail-tag">Purpose:</span>
+        <span class="detail-content">Prevent AI hallucination and ungrounded generation by enforcing a strict prerequisite check for uploaded study materials before allowing Tutor interactions or Quiz synthesis.</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-tag">Contribution:</span>
+        <span class="detail-content">Added client-side and server-side precondition gates (<code>materials.length === 0</code>) that present a clear empty-state prompting document upload, ensuring Gemini Flash Lite only operates on verified course documents.</span>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="category-title" style="margin-top: 14px;">
+    <span>6. Authentication & Security</span>
+    <span class="cat-badge badge-sec">Security</span>
+  </h2>
+
+  <!-- PROMPT 12 -->
+  <div class="prompt-card avoid-break" style="padding: 12px 14px; margin-bottom: 12px;">
+    <div class="prompt-header">
+      <div class="prompt-num-title" style="font-size: 9.5pt;">Prompt 12 — Google OAuth 2.0 Identity Services Integration</div>
+      <div class="prompt-cat-tag">Authentication & Security</div>
+    </div>
+    <div class="prompt-quote" style="font-size: 8.5pt; padding: 8px 10px; margin-bottom: 8px;">"they have metoined security is main proroity so lets keep google auth"</div>
+    <div class="prompt-details" style="gap: 5px; font-size: 8.5pt;">
+      <div class="detail-row">
+        <span class="detail-tag">Purpose:</span>
+        <span class="detail-content">Implement Google OAuth 2.0 authentication to satisfy enterprise-grade security standards and eliminate friction during student onboarding.</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-tag">Contribution:</span>
+        <span class="detail-content">Built full Google Identity Services integration with <code>@react-oauth/google</code>, implemented Google credential JWT verification in backend <code>GoogleAuthService.java</code> via Google API client libraries, and handled automatic account provisioning with secure session issuance.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROMPT 13 -->
+  <div class="prompt-card avoid-break" style="padding: 12px 14px; margin-bottom: 12px;">
+    <div class="prompt-header">
+      <div class="prompt-num-title" style="font-size: 9.5pt;">Prompt 13 — Email OTP Verification Gate on Registration</div>
+      <div class="prompt-cat-tag">Authentication & Security</div>
+    </div>
+    <div class="prompt-quote" style="font-size: 8.5pt; padding: 8px 10px; margin-bottom: 8px;">"also add the otp veriification on singup otp should come to mail"</div>
+    <div class="prompt-details" style="gap: 5px; font-size: 8.5pt;">
+      <div class="detail-row">
+        <span class="detail-tag">Purpose:</span>
+        <span class="detail-content">Protect the platform against automated bot registrations and verify student email ownership using timed one-time passwords (OTP).</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-tag">Contribution:</span>
+        <span class="detail-content">Implemented backend <code>OtpService.java</code> with secure 6-digit cryptographic code generation, 5-minute expiry, rate-limiting, and registration state machine gating account activation until OTP validation.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== PAGE 5: DEBUGGING ==================== -->
+  <div class="page-break"></div>
+  <div class="doc-header">
+    <div class="brand">AiProf Study Companion • Category 7: Debugging & Problem Solving</div>
+    <div class="tag">Engineering Prompts</div>
+  </div>
+
+  <h2 class="category-title">
+    <span>7. Debugging & Problem Solving</span>
+    <span class="cat-badge badge-debug">Debugging</span>
+  </h2>
+
+  <!-- PROMPT 14 -->
+  <div class="prompt-card avoid-break" style="padding: 12px 14px; margin-bottom: 12px;">
+    <div class="prompt-header">
+      <div class="prompt-num-title" style="font-size: 9.5pt;">Prompt 14 — Google OAuth 2.0 Error 400: origin_mismatch Resolution</div>
+      <div class="prompt-cat-tag">Debugging & Problem Solving</div>
+    </div>
+    <div class="prompt-quote" style="font-size: 8.5pt; padding: 8px 10px; margin-bottom: 8px;">"You can't sign in to this app because it doesn't comply with Google's OAuth 2.0 policy.If you're the app developer, register the JavaScript origin in the Google Cloud Console.[Learn more about this error](https://developers.google.com/identity/protocols/oauth2/javascript-implicit-flow#authorization-errors-origin-mismatch)
+If you are a developer of this app, see error details.
+Error 400: origin_mismatch"</div>
+    <div class="prompt-details" style="gap: 5px; font-size: 8.5pt;">
+      <div class="detail-row">
+        <span class="detail-tag">Purpose:</span>
+        <span class="detail-content">Diagnose and resolve an authentication failure blocking Google Sign-In on newly deployed Vercel preview environments.</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-tag">Contribution:</span>
+        <span class="detail-content">Identified that Google Cloud Console client credentials lacked the dynamic Vercel deployment URL origin; guided user through adding authorized JavaScript origins and standardizing on the canonical production domain (<code>https://ai-prof-study-companion.vercel.app</code>).</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROMPT 15 -->
+  <div class="prompt-card avoid-break" style="padding: 12px 14px; margin-bottom: 12px;">
+    <div class="prompt-header">
+      <div class="prompt-num-title" style="font-size: 9.5pt;">Prompt 15 — Cloud SMTP Egress Block Diagnosis & Resend REST API Migration</div>
+      <div class="prompt-cat-tag">Debugging & Problem Solving</div>
+    </div>
+    <div class="prompt-quote consolidated" style="font-size: 8.5pt; padding: 8px 10px; margin-bottom: 8px;"><span class="prompt-label-badge">Consolidated from development conversation</span>
+"Check Your Inbox
+We sent a 6-digit security code to <span class="redacted">[REDACTED EMAIL]</span> i didnt recived it yet
+...
+cant we make it work"</div>
+    <div class="prompt-details" style="gap: 5px; font-size: 8.5pt;">
+      <div class="detail-row">
+        <span class="detail-tag">Purpose:</span>
+        <span class="detail-content">Diagnose why email verification codes failed to deliver in cloud production and engineer a reliable email delivery transport.</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-tag">Contribution:</span>
+        <span class="detail-content">Diagnosed that cloud host Render blocks outbound SMTP ports 25, 465, and 587 by default to prevent spam; re-engineered the email delivery layer by building <code>ResendEmailService.java</code> utilizing Resend's HTTPS REST API over standard port 443, restoring instant OTP delivery.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROMPT 16 -->
+  <div class="prompt-card avoid-break" style="padding: 12px 14px; margin-bottom: 12px;">
+    <div class="prompt-header">
+      <div class="prompt-num-title" style="font-size: 9.5pt;">Prompt 16 — Resolving Minified React Error #310 (Conditional Hook Invocation)</div>
+      <div class="prompt-cat-tag">Debugging & Problem Solving</div>
+    </div>
+    <div class="prompt-quote consolidated" style="font-size: 8.5pt; padding: 8px 10px; margin-bottom: 8px;"><span class="prompt-label-badge">Consolidated from development conversation</span>
+[Screenshot & Runtime Console Trace]
+"Minified React Error #310: Rendered more hooks than during the previous render.
+at Object.Qs [as useMemo] ... at DashboardPage"</div>
+    <div class="prompt-details" style="gap: 5px; font-size: 8.5pt;">
+      <div class="detail-row">
+        <span class="detail-tag">Purpose:</span>
+        <span class="detail-content">Debug an intermittent blank screen crash occurring upon initial dashboard load after authentication.</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-tag">Contribution:</span>
+        <span class="detail-content">Located an illegal early <code>return</code> statement placed prior to <code>useMemo</code> and <code>useEffect</code> hook declarations inside <code>DashboardPage.jsx</code>; refactored hook order so all hooks unconditionally execute at the top level before loading and error states are evaluated.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== PAGE 6: TESTING & DEPLOYMENT ==================== -->
+  <div class="page-break"></div>
+  <div class="doc-header">
+    <div class="brand">AiProf Study Companion • Categories 8 & 9: Testing & Deployment</div>
+    <div class="tag">Engineering Prompts</div>
+  </div>
+
+  <h2 class="category-title">
+    <span>8. Testing & Validation</span>
+    <span class="cat-badge badge-test">Testing & Validation</span>
+  </h2>
+
+  <!-- PROMPT 17 -->
+  <div class="prompt-card avoid-break" style="padding: 12px 14px; margin-bottom: 12px;">
+    <div class="prompt-header">
+      <div class="prompt-num-title" style="font-size: 9.5pt;">Prompt 17 — Functional Validation of End-to-End AI Pipelines</div>
+      <div class="prompt-cat-tag">Testing & Validation</div>
+    </div>
+    <div class="prompt-quote" style="font-size: 8.5pt; padding: 8px 10px; margin-bottom: 8px;">"i ensured that ai features are working well"</div>
+    <div class="prompt-details" style="gap: 5px; font-size: 8.5pt;">
+      <div class="detail-row">
+        <span class="detail-tag">Purpose:</span>
+        <span class="detail-content">Validate functional correctness and response quality of the RAG retrieval pipeline, Gemini Flash Lite Socratic tutoring, and automated quiz question generation.</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-tag">Contribution:</span>
+        <span class="detail-content">Verified that document chunks were accurately embedded via <code>gemini-embedding-001</code>, retrieved via pgvector cosine distance, and synthesized into grounded tutor responses with citations and structured JSON quizzes.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROMPT 18 -->
+  <div class="prompt-card avoid-break" style="padding: 12px 14px; margin-bottom: 12px;">
+    <div class="prompt-header">
+      <div class="prompt-num-title" style="font-size: 9.5pt;">Prompt 18 — Live Production Browser Validation of Deployed System</div>
+      <div class="prompt-cat-tag">Testing & Validation</div>
+    </div>
+    <div class="prompt-quote" style="font-size: 8.5pt; padding: 8px 10px; margin-bottom: 8px;">"https://ai-prof-study-companion-git-main-sathwik-5cbb.vercel.app/dashboard"</div>
+    <div class="prompt-details" style="gap: 5px; font-size: 8.5pt;">
+      <div class="detail-row">
+        <span class="detail-tag">Purpose:</span>
+        <span class="detail-content">Validate the live production deployment via automated browser verification to confirm DOM health, authentication flow, and layout rendering.</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-tag">Contribution:</span>
+        <span class="detail-content">Launched an autonomous browser agent to inspect the live dashboard, verify JWT session recovery from local storage, confirm zero console errors, and validate responsive grid rendering.</span>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="category-title" style="margin-top: 14px;">
+    <span>9. Deployment & Configuration</span>
+    <span class="cat-badge badge-deploy">Deployment & Config</span>
+  </h2>
+
+  <!-- PROMPT 19 -->
+  <div class="prompt-card avoid-break" style="padding: 12px 14px; margin-bottom: 12px;">
+    <div class="prompt-header">
+      <div class="prompt-num-title" style="font-size: 9.5pt;">Prompt 19 — Production OAuth Origin Synchronization Across Vercel Deployments</div>
+      <div class="prompt-cat-tag">Deployment & Configuration</div>
+    </div>
+    <div class="prompt-quote" style="font-size: 8.5pt; padding: 8px 10px; margin-bottom: 8px;">"the sign in with google also not working after updating the vercel link what should i do"</div>
+    <div class="prompt-details" style="gap: 5px; font-size: 8.5pt;">
+      <div class="detail-row">
+        <span class="detail-tag">Purpose:</span>
+        <span class="detail-content">Re-align authentication credentials and environment variables following the creation of a new production domain alias on Vercel.</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-tag">Contribution:</span>
+        <span class="detail-content">Updated client-side <code>VITE_GOOGLE_CLIENT_ID</code> configuration, updated Google Cloud Console authorized origins, and verified that cross-origin resource sharing (CORS) headers on the Spring Boot backend allowed requests from the updated domain.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROMPT 20 -->
+  <div class="prompt-card avoid-break" style="padding: 12px 14px; margin-bottom: 12px;">
+    <div class="prompt-header">
+      <div class="prompt-num-title" style="font-size: 9.5pt;">Prompt 20 — Disabling Vercel Deployment Protection for Public Access</div>
+      <div class="prompt-cat-tag">Deployment & Configuration</div>
+    </div>
+    <div class="prompt-quote" style="font-size: 8.5pt; padding: 8px 10px; margin-bottom: 8px;">"in vercel app if opened by some one else it is asking them to req for acess how to solve this"</div>
+    <div class="prompt-details" style="gap: 5px; font-size: 8.5pt;">
+      <div class="detail-row">
+        <span class="detail-tag">Purpose:</span>
+        <span class="detail-content">Eliminate Vercel's automated authentication barrier (Vercel Authentication / SSO Protection) to allow evaluators to freely access and test the deployed platform.</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-tag">Contribution:</span>
+        <span class="detail-content">Provided exact step-by-step navigation in Vercel project settings (<code>Settings -> Deployment Protection -> Vercel Authentication</code>) to disable preview/production gating, making the web application publicly accessible worldwide without requiring a Vercel team invite.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== PAGE 7: DOCUMENTATION ==================== -->
+  <div class="page-break"></div>
+  <div class="doc-header">
+    <div class="brand">AiProf Study Companion • Category 10: Technical Documentation</div>
+    <div class="tag">Engineering Prompts</div>
+  </div>
+
+  <h2 class="category-title">
+    <span>10. Documentation</span>
+    <span class="cat-badge badge-doc">Documentation</span>
+  </h2>
+
+  <!-- PROMPT 21 -->
+  <div class="prompt-card avoid-break" style="padding: 12px 14px; margin-bottom: 12px;">
+    <div class="prompt-header">
+      <div class="prompt-num-title" style="font-size: 9.5pt;">Prompt 21 — Repository Submission Preparation, README & Secret Sanitization</div>
+      <div class="prompt-cat-tag">Documentation</div>
+    </div>
+    <div class="prompt-quote" style="font-size: 8.5pt; padding: 8px 10px; margin-bottom: 8px;">"so i have to submit this project repo so better i would have neat readme and things Public
+Contains the complete project
+Has a proper README.md
+Has clean project structure
+Doesn't contain secrets (.env, passwords, API keys, etc.)
+Includes backend + frontend + relevant configuration
+Can be cloned and run by the evaluator
+Has meaningful commit history if possible DONT CHANGE THE Application as it is perfect now"</div>
+    <div class="prompt-details" style="gap: 5px; font-size: 8.5pt;">
+      <div class="detail-row">
+        <span class="detail-tag">Purpose:</span>
+        <span class="detail-content">Prepare the entire repository for official evaluator review, crafting a comprehensive README, verifying clone-and-run instructions, and ensuring zero confidential credentials remain in committed files.</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-tag">Contribution:</span>
+        <span class="detail-content">Structured a production-grade root <code>README.md</code>, scrubbed <code>.env</code> and <code>application.yml</code> files replacing secrets with clean environment variable templates (<code>.env.example</code>), verified local build reproducibility (<code>npm run build</code>, <code>mvnw test-compile</code>), and committed the sanitized repository without touching application runtime code.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROMPT 22 -->
+  <div class="prompt-card avoid-break" style="padding: 12px 14px; margin-bottom: 12px;">
+    <div class="prompt-header">
+      <div class="prompt-num-title" style="font-size: 9.5pt;">Prompt 22 — System Architecture Specification Document Generation</div>
+      <div class="prompt-cat-tag">Documentation</div>
+    </div>
+    <div class="prompt-quote consolidated" style="font-size: 8.5pt; padding: 8px 10px; margin-bottom: 8px;"><span class="prompt-label-badge">Consolidated from development conversation</span>
+"Create the Architecture Documentation PDF required for my Full Stack AI Engineer Intern project submission.
+You already have the complete context of the project because you designed and implemented it. Use the actual technologies, architecture, database schema, APIs, authentication flow, AI integration, frontend/backend structure, and deployment setup from our project. Do NOT invent anything..."</div>
+    <div class="prompt-details" style="gap: 5px; font-size: 8.5pt;">
+      <div class="detail-row">
+        <span class="detail-tag">Purpose:</span>
+        <span class="detail-content">Generate an exhaustive, publication-grade technical architecture manual detailing system topology, database schemas, request lifecycles, and security protocols.</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-tag">Contribution:</span>
+        <span class="detail-content">Authored and compiled <code>AiProf_Architecture_Documentation.pdf</code>, featuring complete ASCII flowcharts, entity-relationship schemas, API endpoints, Spring Security filter chains, and cloud deployment topology.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROMPT 23 -->
+  <div class="prompt-card avoid-break" style="padding: 12px 14px; margin-bottom: 12px;">
+    <div class="prompt-header">
+      <div class="prompt-num-title" style="font-size: 9.5pt;">Prompt 23 — Dual-Category AI Tools & Usage Documentation Generation</div>
+      <div class="prompt-cat-tag">Documentation</div>
+    </div>
+    <div class="prompt-quote consolidated" style="font-size: 8.5pt; padding: 8px 10px; margin-bottom: 8px;"><span class="prompt-label-badge">Consolidated from development conversation</span>
+"Create the AI Tools & Usage Documentation PDF required for my Full Stack AI Engineer Intern project submission.
+The document must be transparent and factually accurate. Clearly separate two types of AI usage: AI USED TO BUILD THE PRODUCT (tools that assisted me as the developer) vs AI FEATURES WITHIN THE PRODUCT (functionality built into the final application)..."</div>
+    <div class="prompt-details" style="gap: 5px; font-size: 8.5pt;">
+      <div class="detail-row">
+        <span class="detail-tag">Purpose:</span>
+        <span class="detail-content">Generate an engineering transparency report detailing AI tools used during the development lifecycle contrasted with the AI model capabilities embedded within the student-facing product.</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-tag">Contribution:</span>
+        <span class="detail-content">Authored and compiled <code>AiProf_AI_Tools_and_Usage_Documentation.pdf</code>, providing a rigorous audit of IDE agent usage, prompt engineering methodologies, cost/token efficiency, human oversight guardrails, and production RAG pipeline architecture.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== PAGE 8: SYNTHESIS & REFLECTION ==================== -->
+  <div class="page-break"></div>
+  <div class="doc-header">
+    <div class="brand">AiProf Study Companion • Synthesis: Engineering Reflection & Evaluation Wrap-Up</div>
+    <div class="tag">Engineering Synthesis</div>
+  </div>
+
+  <h2 class="category-title">
+    <span>Engineering Reflection & Prompt Methodology</span>
+    <span class="cat-badge badge-arch">Synthesis</span>
+  </h2>
+
+  <div class="callout" style="background: #ffffff; border: 1px solid #e2e8f0; border-left: 4px solid #6366f1; padding: 14px 16px; margin-bottom: 16px;">
+    <h3 style="font-size: 10.5pt; color: #0f172a; margin-bottom: 8px;">Analysis of Developer AI Prompting Techniques</h3>
+    <p style="margin-bottom: 12px; font-size: 9pt; line-height: 1.5; color: #334155;">
+      Reviewing the chronological prompts across the AiProf development lifecycle demonstrates that AI development tools are most effective when utilized as an interactive, pair-programming collaborator focused on concrete engineering problems rather than a passive code generator. Key methodological patterns observed include:
+    </p>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 10px;">
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px 14px;">
+        <div style="font-weight: 700; color: #1e1b4b; font-size: 8.8pt; margin-bottom: 5px;">1. Problem-First Root Cause Specification</div>
+        <div style="font-size: 8.2pt; color: #475569; line-height: 1.45;">
+          Prompts consistently provided exact error messages (<code>Error 400: origin_mismatch</code>, <code>Minified React Error #310</code>) and runtime symptoms (<code>"everyone is an admin"</code>, <code>"otp is not coming"</code>) rather than speculative descriptions, enabling immediate root-cause isolation.
+        </div>
+      </div>
+
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px 14px;">
+        <div style="font-weight: 700; color: #1e1b4b; font-size: 8.8pt; margin-bottom: 5px;">2. Autonomous Tool-Assisted Verification</div>
+        <div style="font-size: 8.2pt; color: #475569; line-height: 1.45;">
+          The developer instructed the agent to verify deployments and configurations directly using terminal execution, test compilation, and headless browser subagents, confirming that fixes functioned in live production before closing tasks.
+        </div>
+      </div>
+
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px 14px;">
+        <div style="font-weight: 700; color: #1e1b4b; font-size: 8.8pt; margin-bottom: 5px;">3. Explicit Scope Guardrails & Boundaries</div>
+        <div style="font-size: 8.2pt; color: #475569; line-height: 1.45;">
+          Explicit instructions like <code>"DONT CHANGE THE Application as it is perfect now"</code> bounded the AI's operational scope, strictly safeguarding working production application code during documentation and secret sanitization tasks.
+        </div>
+      </div>
+
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px 14px;">
+        <div style="font-weight: 700; color: #1e1b4b; font-size: 8.8pt; margin-bottom: 5px;">4. Architectural Grounding & Zero-Hallucination</div>
+        <div style="font-size: 8.2pt; color: #475569; line-height: 1.45;">
+          The AI was directed to ground every architectural proposal in the actual project tech stack (Spring Boot 3, React 19, Neon PostgreSQL pgvector, Gemini Flash Lite) without introducing superfluous libraries or diverging from specifications.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="category-title" style="margin-top: 16px;">
+    <span>Submission Verification & Deliverables Summary</span>
+    <span class="cat-badge badge-deploy">Deliverables</span>
+  </h2>
+
+  <table class="matrix-table" style="font-size: 8.2pt; margin-bottom: 18px;">
+    <thead>
+      <tr>
+        <th style="width: 25%;">Submission Document</th>
+        <th style="width: 23%;">Filename</th>
+        <th style="width: 15%;">Format & Engine</th>
+        <th style="width: 37%;">Status & Verification</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Artifact I: System Architecture</strong></td>
+        <td><code>AiProf_Architecture_Documentation.pdf</code></td>
+        <td>PDF (Headless Chrome)</td>
+        <td>Completed • Published to GitHub repository root</td>
+      </tr>
+      <tr>
+        <td><strong>Artifact II: AI Tools & Usage</strong></td>
+        <td><code>AiProf_AI_Tools_and_Usage_Documentation.pdf</code></td>
+        <td>PDF (Headless Chrome)</td>
+        <td>Completed • Published to GitHub repository root</td>
+      </tr>
+      <tr>
+        <td><strong>Artifact III: Prompts Used</strong></td>
+        <td><code>AiProf_AI_Prompts_Used_During_Development.pdf</code></td>
+        <td>PDF (Headless Chrome)</td>
+        <td>Completed • 23 Prompts across 10 Categories</td>
+      </tr>
+      <tr>
+        <td><strong>Production Application</strong></td>
+        <td><code>ai-prof-study-companion.vercel.app</code></td>
+        <td>Live Web Platform</td>
+        <td>Publicly accessible • Zero SSO gate • Fully verified</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div style="margin-top: 20px; padding: 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; text-align: center; font-size: 8.2pt; color: #475569;">
+    <strong>AiProf Study Companion</strong> • AI Prompts Used During Development • Prepared for Full Stack AI Engineer Intern Project Submission<br>
+    <span style="color: #64748b; font-size: 7.5pt;">All prompts extracted from authentic Antigravity IDE development session logs • Confirmed and validated by Sathwik Bodakunta</span>
+  </div>
+
+</body>
+</html>
+`;
+
+const htmlFilePath = path.resolve(__dirname, 'ai_prompts_used.html');
+const pdfFilePath = path.resolve(__dirname, 'AiProf_AI_Prompts_Used_During_Development.pdf');
+
+fs.writeFileSync(htmlFilePath, htmlContent, 'utf8');
+console.log('HTML written to:', htmlFilePath);
+
+const chromePath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+const cmd = `"${chromePath}" --headless=new --disable-gpu --print-to-pdf="${pdfFilePath}" --no-pdf-header-footer "${htmlFilePath}"`;
+
+console.log('Generating AI Prompts PDF via headless Chrome...');
+try {
+  execSync(cmd, { stdio: 'inherit' });
+  const stats = fs.statSync(pdfFilePath);
+  console.log('SUCCESS: AI Prompts PDF generated successfully!');
+  console.log('PDF Location:', pdfFilePath);
+  console.log('PDF Size:', (stats.size / 1024).toFixed(1), 'KB');
+} catch (error) {
+  console.error('Failed to generate PDF:', error);
+  process.exit(1);
+}
