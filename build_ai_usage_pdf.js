@@ -1,0 +1,819 @@
+const fs = require('fs');
+const path = require('path');
+const { execSync } = require('child_process');
+
+const htmlContent = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AiProf Study Companion — AI Tools & Usage Documentation</title>
+  <style>
+    @page {
+      size: A4 portrait;
+      margin: 16mm 14mm 16mm 14mm;
+      @bottom-right {
+        content: counter(page);
+        font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+        font-size: 9pt;
+        color: #64748b;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+      color: #1e293b;
+      background-color: #ffffff;
+      line-height: 1.54;
+      font-size: 10pt;
+    }
+
+    /* Page Breaks */
+    .page-break {
+      page-break-before: always;
+      padding-top: 8px;
+    }
+
+    .avoid-break {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    /* Header & Footer */
+    .doc-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #8b5cf6;
+      padding-bottom: 8px;
+      margin-bottom: 20px;
+    }
+
+    .doc-header .brand {
+      font-size: 13pt;
+      font-weight: 800;
+      color: #1e293b;
+      letter-spacing: -0.3px;
+    }
+
+    .doc-header .brand span {
+      color: #8b5cf6;
+    }
+
+    .doc-header .meta {
+      font-size: 8.5pt;
+      color: #64748b;
+      text-align: right;
+    }
+
+    /* Cover Page */
+    .cover-container {
+      padding: 60px 20px 40px;
+      text-align: center;
+      min-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .cover-badge {
+      display: inline-block;
+      background: #f5f3ff;
+      color: #6d28d9;
+      border: 1px solid #ddd6fe;
+      padding: 6px 16px;
+      border-radius: 999px;
+      font-size: 9.5pt;
+      font-weight: 600;
+      margin-bottom: 24px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
+    .cover-title {
+      font-size: 30pt;
+      font-weight: 800;
+      color: #0f172a;
+      line-height: 1.15;
+      letter-spacing: -0.8px;
+      margin-bottom: 12px;
+    }
+
+    .cover-title span {
+      color: #8b5cf6;
+    }
+
+    .cover-subtitle {
+      font-size: 13pt;
+      color: #475569;
+      max-width: 620px;
+      margin: 0 auto 36px;
+      line-height: 1.45;
+    }
+
+    .cover-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 580px;
+      margin: 0 auto 40px;
+      text-align: left;
+    }
+
+    .cover-grid {
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      row-gap: 10px;
+      font-size: 9.5pt;
+    }
+
+    .cover-grid .label {
+      color: #64748b;
+      font-weight: 600;
+    }
+
+    .cover-grid .val {
+      color: #0f172a;
+      font-weight: 500;
+    }
+
+    .cover-highlights {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 10px;
+    }
+
+    .cover-pill {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 8.5pt;
+      font-weight: 600;
+      color: #334155;
+    }
+
+    /* Headings */
+    h1 {
+      font-size: 18pt;
+      font-weight: 800;
+      color: #0f172a;
+      margin-bottom: 12px;
+      padding-bottom: 6px;
+      border-bottom: 1.5px solid #e2e8f0;
+      letter-spacing: -0.4px;
+    }
+
+    h2 {
+      font-size: 13pt;
+      font-weight: 700;
+      color: #1e293b;
+      margin-top: 16px;
+      margin-bottom: 8px;
+      letter-spacing: -0.2px;
+    }
+
+    h3 {
+      font-size: 10.5pt;
+      font-weight: 700;
+      color: #334155;
+      margin-top: 12px;
+      margin-bottom: 6px;
+    }
+
+    p {
+      margin-bottom: 10px;
+      text-align: justify;
+    }
+
+    ul, ol {
+      margin-left: 20px;
+      margin-bottom: 10px;
+    }
+
+    li {
+      margin-bottom: 5px;
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0 16px;
+      font-size: 8.5pt;
+    }
+
+    th, td {
+      border: 1px solid #cbd5e1;
+      padding: 7px 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background-color: #f1f5f9;
+      color: #0f172a;
+      font-weight: 700;
+    }
+
+    tr:nth-child(even) td {
+      background-color: #f8fafc;
+    }
+
+    /* Code & Callouts */
+    code {
+      font-family: 'Consolas', 'Courier New', monospace;
+      background: #f1f5f9;
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-size: 8.5pt;
+      color: #0f172a;
+    }
+
+    pre {
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 8pt;
+      line-height: 1.4;
+      margin: 10px 0;
+      overflow-x: hidden;
+      font-family: 'Consolas', 'Courier New', monospace;
+    }
+
+    .callout {
+      background: #f5f3ff;
+      border-left: 4px solid #8b5cf6;
+      padding: 10px 14px;
+      border-radius: 0 8px 8px 0;
+      margin: 12px 0;
+      font-size: 9pt;
+    }
+
+    .callout strong {
+      color: #6d28d9;
+    }
+
+    .callout-amber {
+      background: #fffbeb;
+      border-left: 4px solid #f59e0b;
+      padding: 10px 14px;
+      border-radius: 0 8px 8px 0;
+      margin: 12px 0;
+      font-size: 9pt;
+    }
+
+    .callout-amber strong {
+      color: #b45309;
+    }
+
+    /* Diagram Wrappers */
+    .diagram-container {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 14px 10px;
+      margin: 14px 0 16px;
+      text-align: center;
+    }
+
+    .diagram-caption {
+      font-size: 8.5pt;
+      font-weight: 600;
+      color: #475569;
+      margin-top: 6px;
+    }
+
+    svg {
+      max-width: 100%;
+      height: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═════════════════════════════════════════════════════════════════ -->
+  <!-- COVER PAGE                                                       -->
+  <!-- ═════════════════════════════════════════════════════════════════ -->
+  <div class="cover-container">
+    <div>
+      <div class="cover-badge">Full Stack AI Engineer Intern • Evaluation Documentation</div>
+      <h1 class="cover-title">AiProf Study Companion</h1>
+      <div style="font-size: 16pt; font-weight: 700; color: #7c3aed; margin-bottom: 8px;">AI Tools & Usage Technical Documentation</div>
+      <p class="cover-subtitle">
+        A Comprehensive, Transparent Disclosure of AI Assistance During Development and the Production AI Models Powering the Deployed Application.
+      </p>
+
+      <div class="cover-card">
+        <div class="cover-grid">
+          <div class="label">Candidate / Developer:</div>
+          <div class="val">Sathwik Bodakunta</div>
+          <div class="label">Submission Track:</div>
+          <div class="val">Full Stack AI Engineer Intern</div>
+          <div class="label">Repository:</div>
+          <div class="val"><code>github.com/sathwik1821/Ai-Prof-Study-Companion</code></div>
+          <div class="label">Live Web App:</div>
+          <div class="val"><code>ai-prof-study-companion.vercel.app</code></div>
+          <div class="label">AI in Development:</div>
+          <div class="val">Google Antigravity IDE (Agentic Assistant & Tooling)</div>
+          <div class="label">AI in Product:</div>
+          <div class="val">Google Gemini Flash Lite & gemini-embedding-001</div>
+          <div class="label">Vector Subsystem:</div>
+          <div class="val">PostgreSQL 16 pgvector (3072-dimensional cosine search)</div>
+          <div class="label">Date:</div>
+          <div class="val">September 2026</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="cover-highlights">
+        <div class="cover-pill">Transparent AI Disclosure</div>
+        <div class="cover-pill">Developer Review Verification</div>
+        <div class="cover-pill">Socratic RAG Tutoring</div>
+        <div class="cover-pill">Adaptive Quiz Generation</div>
+        <div class="cover-pill">Zero Exposed Secrets</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═════════════════════════════════════════════════════════════════ -->
+  <!-- SECTION 1: OVERVIEW                                              -->
+  <!-- ═════════════════════════════════════════════════════════════════ -->
+  <div class="page-break"></div>
+  <div class="doc-header">
+    <div class="brand">AiProf <span>AI Tools & Usage Documentation</span></div>
+    <div class="meta">1. Overview & Separation of Concerns</div>
+  </div>
+
+  <h1>1. Overview & Separation of AI Roles</h1>
+  <p>
+    <strong>AiProf Study Companion</strong> is an enterprise-grade, full-stack educational platform built to transform unstructured academic documents into grounded, interactive learning journeys. Because Artificial Intelligence played a role in both the <em>engineering process</em> and the <em>resulting user experience</em>, this technical document formally and transparently delineates the two distinct categories of AI involvement:
+  </p>
+
+  <div class="callout">
+    <strong>Mandatory Architectural Separation of Concerns:</strong>
+    <ol style="margin-top: 6px; margin-left: 18px;">
+      <li><strong>AI Used to Build the Product (Category A):</strong> Autonomous developer agents, IDE coding assistants, refactoring engines, browser subagents, and automated validation tooling utilized by the developer (Sathwik Bodakunta) during software engineering.</li>
+      <li><strong>AI Embedded in the Final Product (Category B):</strong> Production inference models (Google Gemini Flash Lite, Gemini Embeddings) and vector database infrastructure (PostgreSQL <code>pgvector</code>) that execute inside the live deployed application to deliver tutoring, adaptive quizzing, and document RAG to end-users.</li>
+    </ol>
+  </div>
+
+  <div class="diagram-container avoid-break">
+    <svg viewBox="0 0 740 240" width="740" height="240" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="cardShadow" x="-4%" y="-4%" width="108%" height="112%" filterUnits="userSpaceOnUse">
+          <feDropShadow dx="1" dy="2" stdDeviation="2" flood-color="#0f172a" flood-opacity="0.08"/>
+        </filter>
+        <marker id="arrowHead" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1 L 10 5 L 0 9 z" fill="#7c3aed"/>
+        </marker>
+      </defs>
+
+      <!-- Category A Box -->
+      <rect x="20" y="20" width="330" height="200" rx="8" fill="#f8fafc" stroke="#7c3aed" stroke-width="1.5" filter="url(#cardShadow)"/>
+      <rect x="20" y="20" width="330" height="30" rx="8" fill="#7c3aed"/>
+      <text x="185" y="40" fill="#ffffff" font-size="10" font-weight="700" text-anchor="middle">CATEGORY A: AI USED TO BUILD THE PRODUCT</text>
+      
+      <text x="35" y="70" font-size="8.5" font-weight="700" fill="#1e293b">Target Audience:</text>
+      <text x="135" y="70" font-size="8.5" fill="#475569">Candidate / Developer (Sathwik Bodakunta)</text>
+
+      <text x="35" y="90" font-size="8.5" font-weight="700" fill="#1e293b">Primary Tooling:</text>
+      <text x="135" y="90" font-size="8.5" fill="#475569">Google Antigravity IDE (Agentic Assistant)</text>
+
+      <text x="35" y="110" font-size="8.5" font-weight="700" fill="#1e293b">Key Applications:</text>
+      <text x="45" y="128" font-size="8" fill="#334155">• Spring Boot 3.4 & React 19 boilerplate generation</text>
+      <text x="45" y="144" font-size="8" fill="#334155">• Flyway SQL schema migration drafting (V1–V7)</text>
+      <text x="45" y="160" font-size="8" fill="#334155">• React hook order debugging (Error #310 resolution)</text>
+      <text x="45" y="176" font-size="8" fill="#334155">• Autonomous headless browser testing & DOM auditing</text>
+
+      <text x="35" y="202" font-size="8" font-weight="600" fill="#6d28d9">Human Role: 100% human architectural review & verification</text>
+
+      <!-- Category B Box -->
+      <rect x="390" y="20" width="330" height="200" rx="8" fill="#f8fafc" stroke="#047857" stroke-width="1.5" filter="url(#cardShadow)"/>
+      <rect x="390" y="20" width="330" height="30" rx="8" fill="#047857"/>
+      <text x="555" y="40" fill="#ffffff" font-size="10" font-weight="700" text-anchor="middle">CATEGORY B: AI EMBEDDED IN FINAL PRODUCT</text>
+
+      <text x="405" y="70" font-size="8.5" font-weight="700" fill="#1e293b">Target Audience:</text>
+      <text x="505" y="70" font-size="8.5" fill="#475569">End-Users, University Students, Evaluator</text>
+
+      <text x="405" y="90" font-size="8.5" font-weight="700" fill="#1e293b">Runtime Models:</text>
+      <text x="505" y="90" font-size="8.5" fill="#047857" font-weight="600">Gemini Flash Lite • gemini-embedding-001</text>
+
+      <text x="405" y="110" font-size="8.5" font-weight="700" fill="#1e293b">Production Features:</text>
+      <text x="415" y="128" font-size="8" fill="#334155">• Socratic AI Tutor with clickable document citations</text>
+      <text x="415" y="144" font-size="8" fill="#334155">• RAG document semantic chunking & 3072d vector search</text>
+      <text x="415" y="160" font-size="8" fill="#334155">• Adaptive multi-format diagnostic quiz generation</text>
+      <text x="415" y="176" font-size="8" fill="#334155">• Cognitive concept mastery & prescriptive recommendations</text>
+
+      <text x="405" y="202" font-size="8" font-weight="600" fill="#047857">Runtime State: Integrated in live backend code & database</text>
+    </svg>
+    <div class="diagram-caption">Figure 1.1: Complete Decoupling of AI Development Tools vs. Production AI Functionality</div>
+  </div>
+
+  <!-- ═════════════════════════════════════════════════════════════════ -->
+  <!-- SECTION 2: AI USED TO BUILD THE PRODUCT                          -->
+  <!-- ═════════════════════════════════════════════════════════════════ -->
+  <div class="page-break"></div>
+  <div class="doc-header">
+    <div class="brand">AiProf <span>AI Tools & Usage Documentation</span></div>
+    <div class="meta">2. AI Used to Build the Product</div>
+  </div>
+
+  <h1>2. AI Used to Build the Product (Category A)</h1>
+  <p>
+    During the implementation of the AiProf platform, specialized AI-assisted development tools were utilized to accelerate boilerplate authoring, automate cross-file refactoring, perform root-cause debugging on compilation and runtime errors, and autonomously audit production deployments.
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 22%;">AI Tool / System</th>
+        <th style="width: 18%;">Category</th>
+        <th style="width: 25%;">Development Use</th>
+        <th style="width: 35%;">Detailed Description of Assistance</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Google Antigravity IDE Agent</strong></td>
+        <td>Development Agent / Coding Assistant</td>
+        <td>Full-Stack Implementation & Refactoring</td>
+        <td>Assisted in scaffolding Spring Boot 3.4.3 backend components, JPA entities, repositories, and React 19 UI layouts; performed non-contiguous edits across multi-file refactoring cycles.</td>
+      </tr>
+      <tr>
+        <td><strong>Antigravity Browser Subagent</strong></td>
+        <td>AI Debugging & Testing Tool</td>
+        <td>Autonomous Web Verification & Telemetry</td>
+        <td>Programmatically navigated the live Vercel production deployment, captured headless screenshots, read the active DOM, and captured console logs to detect runtime rendering crashes.</td>
+      </tr>
+      <tr>
+        <td><strong>Gemini Technical Reasoning</strong></td>
+        <td>Problem Solving & Architecture</td>
+        <td>Flyway Migration & Schema Alignment</td>
+        <td>Formulated version-controlled SQL migrations (<code>V1__init_extensions.sql</code> to <code>V7__email_verification_otp.sql</code>), ensuring vector column alignment and foreign key cascading rules.</td>
+      </tr>
+      <tr>
+        <td><strong>Automated CLI Test Runners</strong></td>
+        <td>Debugging & Compilation Agent</td>
+        <td>Build Integrity Validation</td>
+        <td>Monitored background execution of Maven test compilation (<code>mvnw test-compile</code>) and Vite production bundling (<code>npm run build</code>) after each incremental architectural change.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>2.1 Major Development Tasks Accelerated by AI</h3>
+  <ol>
+    <li><strong>RAG Pipeline Scaffolding:</strong> Assisted in writing the Apache Tika file ingestion logic, sliding-window chunking algorithms (400 tokens / 50 overlap), and Spring Data JPA native SQL queries calculating cosine distance (<code>&lt;=&gt;</code>) over <code>VECTOR(3072)</code> columns.</li>
+    <li><strong>Dual Authentication Integration:</strong> Supported implementation of the Google Identity Services button integration, backend ID token validation via Google OAuth tokeninfo endpoints, and fallback email OTP generation.</li>
+    <li><strong>React Hook Order Debugging (Error #310):</strong> When the dashboard threw a minified React Error #310 in production, the AI assistant identified that <code>useMemo</code> was called conditionally below an early <code>if (loading) return skeleton</code> check, and refactored the component to restore deterministic hook execution order.</li>
+    <li><strong>Cloud SMTP Firewall Mitigation:</strong> Diagnosed that Render's Free tier firewall blocks outbound TCP ports 25, 465, and 587, and implemented the resilient Resend HTTP REST API (port 443) transport with auto-fill preview code fallbacks in <code>EmailService.java</code> and <code>OtpVerifyPage.jsx</code>.</li>
+  </ol>
+
+  <!-- ═════════════════════════════════════════════════════════════════ -->
+  <!-- SECTION 3: DEVELOPER CONTRIBUTION                                -->
+  <!-- ═════════════════════════════════════════════════════════════════ -->
+  <div class="page-break"></div>
+  <div class="doc-header">
+    <div class="brand">AiProf <span>AI Tools & Usage Documentation</span></div>
+    <div class="meta">3. Developer Contribution & Engineering Review</div>
+  </div>
+
+  <h1>3. Developer Contribution & Engineering Review</h1>
+  <p>
+    While AI tooling provided substantial acceleration, <strong>the human developer maintained complete architectural ownership, technical judgment, and verification responsibility</strong> across all phases of development. AI tools did not independently build the product; every artifact was subjected to developer review, adaptation, and testing.
+  </p>
+
+  <div class="callout-amber">
+    <strong>Key Human Engineering Responsibilities Executed by Developer (Sathwik Bodakunta):</strong>
+    <ul style="margin-top: 6px; margin-left: 18px;">
+      <li><strong>Requirements Interpretation & Scope Definition:</strong> Defined core features including the Socratic tutoring pedagogy, the Empty Materials Gate, concept mastery algorithms, and sidebar navigation restructuring.</li>
+      <li><strong>Architectural Decision-Making:</strong> Selected PostgreSQL <code>pgvector</code> over external vector databases (e.g. Pinecone) to eliminate distributed synchronization latency and preserve ACID relational integrity.</li>
+      <li><strong>Code Inspection & Modification:</strong> Reviewed all generated DTOs, entity relationships, security filters, and React hooks. Rejected hardcoded test concepts in favor of dynamic database-backed mastery tracking.</li>
+      <li><strong>Security & Secret Sanitization:</strong> Audited <code>application.yml</code> and <code>.env.example</code> to scrub real Google App Passwords, API keys, and database credentials before committing to public GitHub.</li>
+      <li><strong>Infrastructure & Deployment Management:</strong> Configured Google Cloud Console OAuth 2.0 authorized JavaScript origins, Neon serverless PostgreSQL connection strings, Vercel SPA routing rules, and Render web service environment variables.</li>
+      <li><strong>Functional & User Flow Validation:</strong> Verified authentication flows, document uploads, vector ingestion, and quiz attempts through manual and browser-driven testing.</li>
+    </ul>
+  </div>
+
+  <!-- ═════════════════════════════════════════════════════════════════ -->
+  <!-- SECTION 4: AI USED BY THE FINAL PRODUCT                          -->
+  <!-- ═════════════════════════════════════════════════════════════════ -->
+  <div class="page-break"></div>
+  <div class="doc-header">
+    <div class="brand">AiProf <span>AI Tools & Usage Documentation</span></div>
+    <div class="meta">4. AI Used by the Final Product</div>
+  </div>
+
+  <h1>4. AI Used by the Final Product (Category B)</h1>
+  <p>
+    The production application deployed at <code>ai-prof-study-companion.vercel.app</code> contains five integrated AI-powered capabilities that execute in real time to serve end-user academic needs:
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 22%;">Product Feature</th>
+        <th style="width: 28%;">Educational Purpose</th>
+        <th style="width: 25%;">Runtime AI Model / Engine</th>
+        <th style="width: 25%;">User Interaction / Output</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Socratic AI Tutor</strong></td>
+        <td>Interactive inquiry-based learning that guides students through questioning rather than direct answers.</td>
+        <td>Google Gemini Flash Lite (<code>gemini-flash-lite-latest</code>)</td>
+        <td>Conversational dialogue with markdown support and clickable chunk citations: <code>[Citation: doc (chunk #)]</code>.</td>
+      </tr>
+      <tr>
+        <td><strong>RAG Semantic Document Search</strong></td>
+        <td>Retrieves the most semantically relevant text passages from uploaded course materials.</td>
+        <td>Google Gemini Embedding (<code>gemini-embedding-001</code>) + pgvector</td>
+        <td>Under-the-hood vector generation (3072 dimensions) and cosine distance nearest-neighbor queries (<code>&lt;=&gt;</code>).</td>
+      </tr>
+      <tr>
+        <td><strong>Adaptive Quiz Synthesis</strong></td>
+        <td>Synthesizes multi-format diagnostic assessments derived strictly from course documents.</td>
+        <td>Google Gemini Flash Lite (<code>gemini-flash-lite-latest</code>)</td>
+        <td>Multiple-choice, true/false, and short-answer quizzes with answer rationales and concept tags.</td>
+      </tr>
+      <tr>
+        <td><strong>Concept Mastery Assessment</strong></td>
+        <td>Quantifies cognitive retention ($0\% - 100\%$) per academic concept and diagnoses gaps.</td>
+        <td>Algorithmic scoring + AI concept categorization</td>
+        <td>Dynamic mastery radar charts, horizontal retention bars, and weak-concept alerts on Analytics.</td>
+      </tr>
+      <tr>
+        <td><strong>Targeted Mastery Recommendations</strong></td>
+        <td>Prescribes high-priority learning actions based on the student's weakest mastered concepts.</td>
+        <td>Heuristic AI recommendation engine in <code>MasteryService</code></td>
+        <td>Prominent Dashboard card: *"Prescriptive Learning Target"* with 1-click action routing.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="diagram-container avoid-break">
+    <svg viewBox="0 0 740 260" width="740" height="260" xmlns="http://www.w3.org/2000/svg">
+      <!-- Step 1: User -->
+      <rect x="20" y="30" width="115" height="200" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+      <rect x="20" y="30" width="115" height="26" rx="6" fill="#1e293b"/>
+      <text x="77" y="47" fill="#ffffff" font-size="8.5" font-weight="700" text-anchor="middle">1. STUDENT (UI)</text>
+      <text x="77" y="75" font-size="7.5" font-weight="600" text-anchor="middle">Asks Question</text>
+      <text x="77" y="90" font-size="7" fill="#64748b" text-anchor="middle">"Explain Raft"</text>
+      <text x="77" y="125" font-size="7.5" font-weight="600" text-anchor="middle">Uploads Slide</text>
+      <text x="77" y="140" font-size="7" fill="#64748b" text-anchor="middle">PDF/DOCX/TXT</text>
+      <text x="77" y="175" font-size="7.5" font-weight="600" text-anchor="middle">Takes Quiz</text>
+      <text x="77" y="190" font-size="7" fill="#64748b" text-anchor="middle">Adaptive Assessment</text>
+
+      <path d="M 135 130 L 165 130" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arrowHead)"/>
+
+      <!-- Step 2: Frontend -->
+      <rect x="170" y="30" width="120" height="200" rx="6" fill="#f8fafc" stroke="#7c3aed" stroke-width="1.5"/>
+      <rect x="170" y="30" width="120" height="26" rx="6" fill="#7c3aed"/>
+      <text x="230" y="47" fill="#ffffff" font-size="8.5" font-weight="700" text-anchor="middle">2. REACT 19 SPA</text>
+      <text x="230" y="75" font-size="7.5" font-weight="600" text-anchor="middle">TutorPage.jsx</text>
+      <text x="230" y="90" font-size="7" fill="#64748b" text-anchor="middle">Dispatches payload</text>
+      <text x="230" y="125" font-size="7.5" font-weight="600" text-anchor="middle">Empty Gate Check</text>
+      <text x="230" y="140" font-size="7" fill="#64748b" text-anchor="middle">Prompts doc upload</text>
+      <text x="230" y="175" font-size="7.5" font-weight="600" text-anchor="middle">Axios Client</text>
+      <text x="230" y="190" font-size="7" fill="#64748b" text-anchor="middle">Injects JWT Token</text>
+
+      <path d="M 290 130 L 320 130" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arrowHead)"/>
+
+      <!-- Step 3: Backend -->
+      <rect x="325" y="30" width="135" height="200" rx="6" fill="#f8fafc" stroke="#1e293b" stroke-width="1.5"/>
+      <rect x="325" y="30" width="135" height="26" rx="6" fill="#1e293b"/>
+      <text x="392" y="47" fill="#ffffff" font-size="8.5" font-weight="700" text-anchor="middle">3. SPRING BOOT</text>
+      <text x="392" y="75" font-size="7.5" font-weight="600" text-anchor="middle">TutorService</text>
+      <text x="392" y="90" font-size="7" fill="#64748b" text-anchor="middle">Verifies materials &gt; 0</text>
+      <text x="392" y="120" font-size="7.5" font-weight="600" text-anchor="middle">RagService</text>
+      <text x="392" y="135" font-size="7" fill="#64748b" text-anchor="middle">Vector Q Embedding</text>
+      <text x="392" y="150" font-size="7" fill="#64748b" text-anchor="middle">Augments prompt</text>
+      <text x="392" y="180" font-size="7.5" font-weight="600" text-anchor="middle">Citation Parser</text>
+      <text x="392" y="195" font-size="7" fill="#64748b" text-anchor="middle">Extracts chunk IDs</text>
+
+      <path d="M 460 90 L 495 70" stroke="#047857" stroke-width="1.5" marker-end="url(#arrowHead)"/>
+      <path d="M 460 160 L 495 180" stroke="#4338ca" stroke-width="1.5" marker-end="url(#arrowHead)"/>
+
+      <!-- Step 4A: pgvector -->
+      <rect x="500" y="25" width="220" height="90" rx="6" fill="#ffffff" stroke="#047857" stroke-width="1.5"/>
+      <rect x="500" y="25" width="220" height="22" rx="6" fill="#047857"/>
+      <text x="610" y="40" fill="#ffffff" font-size="8" font-weight="700" text-anchor="middle">4A. POSTGRESQL PGVECTOR (Neon)</text>
+      <text x="610" y="60" font-size="7.5" font-weight="600" text-anchor="middle">Native Cosine Distance Search</text>
+      <text x="610" y="73" font-size="7" font-family="monospace">SELECT * FROM document_chunks</text>
+      <text x="610" y="85" font-size="7" font-family="monospace">ORDER BY embedding <=> Q_VEC LIMIT 6</text>
+      <text x="610" y="100" font-size="7" fill="#047857" font-weight="600" text-anchor="middle">Returns: Top 6 Grounded Text Chunks</text>
+
+      <!-- Step 4B: Gemini -->
+      <rect x="500" y="135" width="220" height="95" rx="6" fill="#ffffff" stroke="#4338ca" stroke-width="1.5"/>
+      <rect x="500" y="135" width="220" height="22" rx="6" fill="#4338ca"/>
+      <text x="610" y="150" fill="#ffffff" font-size="8" font-weight="700" text-anchor="middle">4B. GOOGLE GEMINI FLASH LITE</text>
+      <text x="610" y="172" font-size="7.5" font-weight="600" text-anchor="middle">Socratic LLM Inference</text>
+      <text x="610" y="185" font-size="7" fill="#64748b" text-anchor="middle">System Guardrail: No direct answers</text>
+      <text x="610" y="198" font-size="7" fill="#64748b" text-anchor="middle">Mandatory Citations: [Citation: ...]</text>
+      <text x="610" y="212" font-size="7" fill="#4338ca" font-weight="600" text-anchor="middle">Returns: Pedagogical guidance & question</text>
+    </svg>
+    <div class="diagram-caption">Figure 4.1: Live Production AI Request, Vector Search, and Socratic Inference Pipeline</div>
+  </div>
+
+  <!-- ═════════════════════════════════════════════════════════════════ -->
+  <!-- SECTION 5: PRODUCT AI FEATURE DETAILS                            -->
+  <!-- ═════════════════════════════════════════════════════════════════ -->
+  <div class="page-break"></div>
+  <div class="doc-header">
+    <div class="brand">AiProf <span>AI Tools & Usage Documentation</span></div>
+    <div class="meta">5. Technical Details of Product AI Features</div>
+  </div>
+
+  <h1>5. Product AI Feature Details</h1>
+
+  <h3>5.1 Socratic AI Tutor</h3>
+  <ul>
+    <li><strong>User Input:</strong> The student inputs an inquiry or concept question in the tutor chat interface.</li>
+    <li><strong>Request Flow:</strong> Dispatched via <code>POST /api/projects/{id}/tutor/chat</code> with the question text.</li>
+    <li><strong>Backend Construction:</strong> <code>TutorService</code> checks for uploaded course materials. If zero documents exist, it throws <code>NO_MATERIALS</code> and halts inference. If documents exist, it converts the prompt into a 3072-dimensional vector via <code>RagService.getEmbedding(prompt)</code>, queries <code>document_chunks</code> using cosine distance (<code>&lt;=&gt;</code>), and retrieves the Top 6 matching excerpts.</li>
+    <li><strong>Socratic Prompt Construction:</strong>
+      <pre>You are an expert academic tutor. Context excerpts from verified course materials:
+[Chunk 1]: ...
+[Chunk 2]: ...
+Student Question: {userPrompt}
+Instructions:
+1. Do not give the solution directly. Use Socratic dialogic questioning.
+2. Formulate a targeted question or hint that leads the student toward discovery.
+3. Explicitly cite chunks using: [Citation: filename (chunk #)].</pre>
+    </li>
+    <li><strong>Output Processing & Presentation:</strong> The response is parsed for citation tags, persisted in <code>chat_messages</code>, and rendered in <code>TutorPage.jsx</code> with interactive citation badges that highlight the original document excerpts.</li>
+  </ul>
+
+  <h3>5.2 Adaptive Diagnostic Quiz Generation</h3>
+  <ul>
+    <li><strong>User Input:</strong> Student clicks *"Generate Practice Quiz"* inside a course project.</li>
+    <li><strong>Processing Logic:</strong> <code>QuizService</code> gathers representative semantic chunks across all project materials. It queries Gemini Flash Lite with a structured JSON schema prompt specifying question count, question type (Multiple Choice, True/False, Short Answer), options, correct answers, explanations, and target concept tags.</li>
+    <li><strong>Validation & Persistence:</strong> Backend validates that generated options contain valid keys and a non-empty correct answer, persisting them in <code>quizzes</code> and <code>quiz_questions</code> tables.</li>
+    <li><strong>Student Presentation:</strong> <code>QuizPage.jsx</code> provides an interactive assessment runner with per-question timers, option selection, immediate conceptual rationales, and grading breakdowns.</li>
+  </ul>
+
+  <h3>5.3 Concept Mastery Tracking & Prescriptive Recommendations</h3>
+  <ul>
+    <li><strong>Scoring & Updates:</strong> Upon quiz submission (<code>POST /api/quizzes/{id}/submit</code>), the backend computes percentage accuracy and updates the student's mastery score in <code>concept_mastery</code> using an exponential moving average:
+      <div style="background: #f1f5f9; padding: 6px 14px; border-radius: 6px; display: inline-block; font-family: monospace; font-size: 8.5pt; margin: 6px 0; border: 1px solid #cbd5e1;">
+        New_Mastery = (Old_Mastery × 0.4) + (Attempt_Score × 0.6)
+      </div>
+    </li>
+    <li><strong>Targeted Recommendation Engine:</strong> <code>MasteryService</code> identifies concepts with mastery score &lt; 70%. If a weak concept exists, the Dashboard highlights it in the **Targeted Mastery Recommendation Card** (e.g. *"Concept Retention • Binary Search (35%)"*), routing the student directly to focused quiz practice or tutor questioning with a single click.</li>
+  </ul>
+
+  <!-- ═════════════════════════════════════════════════════════════════ -->
+  <!-- SECTION 6: AI MODELS AND PROVIDERS MATRIX                        -->
+  <!-- ═════════════════════════════════════════════════════════════════ -->
+  <div class="page-break"></div>
+  <div class="doc-header">
+    <div class="brand">AiProf <span>AI Tools & Usage Documentation</span></div>
+    <div class="meta">6. Models & Providers Matrix</div>
+  </div>
+
+  <h1>6. AI Models & Providers: Explicit Differentiation</h1>
+  <p>
+    To ensure complete transparency and prevent conflation between development tooling and production systems, the table below provides a strict, unambiguous matrix of all AI technologies associated with this project:
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 25%;">Model / System Name</th>
+        <th style="width: 20%;">Provider / Creator</th>
+        <th style="width: 22%;">Role Classification</th>
+        <th style="width: 33%;">Exact Deployment Context</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Antigravity IDE Assistant</strong></td>
+        <td>Google DeepMind</td>
+        <td><strong>Development Tool (Category A)</strong></td>
+        <td>Assisted developer during local coding; not accessible or present in the deployed application.</td>
+      </tr>
+      <tr>
+        <td><strong>Antigravity Browser Subagent</strong></td>
+        <td>Google DeepMind</td>
+        <td><strong>Development Tool (Category A)</strong></td>
+        <td>Autonomous browser testing during local verification; not part of production runtime.</td>
+      </tr>
+      <tr>
+        <td><strong>gemini-flash-lite-latest</strong></td>
+        <td>Google AI Studio</td>
+        <td><strong>Production Model (Category B)</strong></td>
+        <td>Embedded in live Spring Boot backend (<code>app.ai.gemini.text-model</code>); powers Socratic tutoring & quiz synthesis.</td>
+      </tr>
+      <tr>
+        <td><strong>gemini-embedding-001</strong></td>
+        <td>Google AI Studio</td>
+        <td><strong>Production Model (Category B)</strong></td>
+        <td>Embedded in live Spring Boot backend (<code>app.ai.gemini.embedding-model</code>); generates 3072d dense vectors.</td>
+      </tr>
+      <tr>
+        <td><strong>PostgreSQL pgvector</strong></td>
+        <td>PostgreSQL / pgvector</td>
+        <td><strong>Production Vector Subsystem</strong></td>
+        <td>Neon Serverless Database; calculates native cosine distance similarity for RAG chunk retrieval.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ═════════════════════════════════════════════════════════════════ -->
+  <!-- SECTION 7: RESPONSIBLE AI USAGE                                  -->
+  <!-- ═════════════════════════════════════════════════════════════════ -->
+  <div class="page-break"></div>
+  <div class="doc-header">
+    <div class="brand">AiProf <span>AI Tools & Usage Documentation</span></div>
+    <div class="meta">7. Responsible AI Usage & Governance</div>
+  </div>
+
+  <h1>7. Responsible AI Usage & Governance</h1>
+  <ul>
+    <li><strong>Human Code Auditing:</strong> Every AI-suggested code snippet was reviewed for architectural soundness, memory efficiency, and security before being integrated into git.</li>
+    <li><strong>Prevention of Hallucinations via Grounding:</strong> The Socratic AI Tutor strictly references ingested documents. If a query falls outside the project's source materials, the system guardrail explicitly directs the model to decline answering rather than inventing facts.</li>
+    <li><strong>Empty Materials Gate:</strong> Prevents ungrounded inference by enforcing that a student must upload at least one verified course document before accessing tutoring or diagnostic quizzes.</li>
+    <li><strong>Zero Secret Exposure:</strong> No API keys, OAuth client secrets, or database passwords are hardcoded in git. All sensitive credentials are provided dynamically via environment variables (<code>GEMINI_API_KEY</code>, <code>JWT_SECRET</code>).</li>
+    <li><strong>Pedagogical Safeguards:</strong> Prompts enforce interactive questioning rather than homework-solving shortcuts, fostering genuine learning and cognitive retention.</li>
+  </ul>
+
+  <!-- ═════════════════════════════════════════════════════════════════ -->
+  <!-- SECTION 8: LIMITATIONS & LESSONS LEARNED                         -->
+  <!-- ═════════════════════════════════════════════════════════════════ -->
+  <div class="page-break"></div>
+  <div class="doc-header">
+    <div class="brand">AiProf <span>AI Tools & Usage Documentation</span></div>
+    <div class="meta">8. Limitations & Lessons Learned & 9. Summary</div>
+  </div>
+
+  <h1>8. Limitations & Lessons Learned</h1>
+
+  <h3>8.1 Technical Limitations Encountered</h3>
+  <ul>
+    <li><strong>Cloud Firewall Restrictions on Outbound SMTP:</strong> Render's free tier firewalls block outbound raw TCP traffic on ports 25, 465, and 587. Even with valid Gmail credentials, direct SMTP fails. This necessitated engineering an HTTP REST email transport via Resend (HTTPS port 443) and implementing dev-code auto-fill fallbacks.</li>
+    <li><strong>React Hook Order Determinism (Error #310):</strong> AI code generation initially placed a <code>useMemo</code> hook below an early <code>if (loading) return skeleton</code> check in <code>DashboardPage.jsx</code>. In production, this caused a fatal React crash on re-render. Resolving this reinforced the importance of human code review regarding React's strict Rules of Hooks.</li>
+    <li><strong>Embedding Dimensions & Schema Alignment:</strong> Google's <code>gemini-embedding-001</code> outputs 3072-dimensional vectors. Schema migrations had to explicitly align the PostgreSQL column type to <code>VECTOR(3072)</code>, requiring specialized Flyway DDL coordination.</li>
+    <li><strong>Single-Origin OAuth Restrictions:</strong> Google Identity Services strictly rejects origins not pre-registered in Google Cloud Console. Transitioning between preview URLs required developer intervention to authorize Vercel production domains.</li>
+  </ul>
+
+  <h3>8.2 Key Lessons Learned</h3>
+  <ul>
+    <li><strong>AI Tools Require Technical Guidance:</strong> AI assistants are highly capable of generating boilerplate and diagnosing errors, but cannot replace architectural judgment, domain modeling, or comprehensive verification.</li>
+    <li><strong>RAG Quality Depends on Chunking Strategy:</strong> A 400-token window with 50-token overlap provided the optimal balance between granular vector cosine similarity and contextual comprehension for academic text.</li>
+    <li><strong>Stateless Architecture Ensures Seamless Deployment:</strong> Decoupling the Vite/React frontend onto Vercel's edge network and the Spring Boot backend into Render's container runtime ensured zero coupling and clean independent scalability.</li>
+  </ul>
+
+  <!-- ═════════════════════════════════════════════════════════════════ -->
+  <!-- SECTION 9: SUMMARY                                               -->
+  <!-- ═════════════════════════════════════════════════════════════════ -->
+  <h1>9. Summary</h1>
+
+  <div class="callout" style="background: #f8fafc; border-left: 4px solid #0f172a;">
+    <p style="margin-bottom: 6px;">
+      <strong>AI-Assisted Development (Category A):</strong><br>
+      The developer utilized Google Antigravity IDE and autonomous agentic subagents for boilerplate generation, Flyway migration drafting, React Error #310 debugging, and headless browser deployment verification. All generated outputs were reviewed, tested, and approved by the developer.
+    </p>
+    <p style="margin-bottom: 0;">
+      <strong>AI-Powered Product (Category B):</strong><br>
+      The deployed AiProf platform incorporates Google Gemini Flash Lite (<code>gemini-flash-lite-latest</code>) and Gemini Embeddings (<code>gemini-embedding-001</code>) paired with PostgreSQL <code>pgvector</code> to deliver grounded Socratic tutoring, 3072d vector search, adaptive diagnostic quiz synthesis, and real-time concept mastery tracking to students.
+    </p>
+  </div>
+
+  <div style="margin-top: 36px; padding: 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; text-align: center; font-size: 8pt; color: #64748b;">
+    <strong>AiProf Study Companion</strong> • AI Tools & Usage Technical Documentation • Prepared for Full Stack AI Engineer Intern Submission • © 2026 Sathwik Bodakunta
+  </div>
+
+</body>
+</html>
+`;
+
+const htmlFilePath = path.resolve(__dirname, 'ai_tools_and_usage.html');
+const pdfFilePath = path.resolve(__dirname, 'AiProf_AI_Tools_and_Usage_Documentation.pdf');
+
+fs.writeFileSync(htmlFilePath, htmlContent, 'utf8');
+console.log('HTML written to:', htmlFilePath);
+
+const chromePath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+const cmd = `"${chromePath}" --headless=new --disable-gpu --print-to-pdf="${pdfFilePath}" --no-pdf-header-footer "${htmlFilePath}"`;
+
+console.log('Generating AI Usage PDF via headless Chrome...');
+try {
+  execSync(cmd, { stdio: 'inherit' });
+  const stats = fs.statSync(pdfFilePath);
+  console.log('SUCCESS: AI Tools & Usage PDF generated successfully!');
+  console.log('PDF Location:', pdfFilePath);
+  console.log('PDF Size:', (stats.size / 1024).toFixed(1), 'KB');
+} catch (error) {
+  console.error('Failed to generate PDF:', error);
+  process.exit(1);
+}
