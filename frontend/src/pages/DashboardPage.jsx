@@ -173,6 +173,9 @@ export default function DashboardPage() {
           </p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <button className="btn btn-secondary" onClick={() => navigate('/spaces')}>
+            <Folder size={15} /> My Spaces
+          </button>
           <button id="create-space-btn" className="btn btn-primary" onClick={() => handleOpenCreateSpace()}>
             <Plus size={16} /> New Space
           </button>
@@ -323,89 +326,34 @@ export default function DashboardPage() {
         <div className="dash-stats">
           <StatCard
             icon={<Folder size={20} />}
-            label="Spaces"
+            label="Total Spaces"
             value={analytics.totalSpaces ?? spaces.length}
             color="brand"
+            onClick={() => navigate('/spaces')}
           />
           <StatCard
             icon={<BookOpen size={20} />}
-            label="Projects"
+            label="Active Projects"
             value={analytics.totalProjects ?? 0}
             color="violet"
+            onClick={() => navigate('/spaces')}
           />
           <StatCard
             icon={<Brain size={20} />}
             label="Avg. Mastery"
             value={`${Math.round(analytics.averageMastery ?? 0)}%`}
             color="cyan"
+            onClick={() => navigate('/analytics')}
           />
           <StatCard
             icon={<Target size={20} />}
             label="Quiz Sessions"
             value={analytics.totalQuizAttempts ?? 0}
             color="emerald"
+            onClick={() => navigate('/analytics')}
           />
         </div>
       )}
-
-
-
-      {/* ══════════ YOUR SPACES GRID ══════════ */}
-      <div className="dash-section">
-        <div className="dash-section-header">
-          <h2>
-            Your Learning Spaces <span className="badge badge-muted">{spaces.length}</span>
-          </h2>
-        </div>
-
-        {spaces.length === 0 ? (
-          <div className="empty-state">
-            <Folder size={48} className="empty-state-icon" />
-            <h3>No spaces yet</h3>
-            <p>
-              Spaces are your high-level learning domains — like "Computer Science" or "Organic Chemistry"
-            </p>
-            <button className="btn btn-primary" onClick={() => handleOpenCreateSpace()}>
-              <Plus size={16} /> Create your first space
-            </button>
-          </div>
-        ) : (
-          <div className="spaces-grid">
-            {spaces.map((space) => (
-              <div
-                key={space.id}
-                className="space-card card card-interactive"
-                onClick={() => navigate(`/spaces/${space.id}`)}
-              >
-                <div className="space-card-header">
-                  <div className="space-icon">
-                    <Folder size={20} />
-                  </div>
-                  <button
-                    className="btn btn-ghost btn-icon btn-sm space-delete"
-                    onClick={(e) => deleteSpace(e, space.id)}
-                    title="Delete space"
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-                <h3 className="space-name">{space.name}</h3>
-                {space.description && <p className="space-desc">{space.description}</p>}
-                <div className="space-footer">
-                  <span className="badge badge-muted">
-                    <BookOpen size={11} /> {space.projectCount ?? 0} projects
-                  </span>
-                  <ChevronRight size={14} className="space-arrow" />
-                </div>
-              </div>
-            ))}
-            <button className="space-card-add" onClick={() => setShowModal(true)}>
-              <Plus size={22} />
-              <span>New space</span>
-            </button>
-          </div>
-        )}
-      </div>
 
       {/* Create space modal */}
       {showModal && (
@@ -449,7 +397,7 @@ export default function DashboardPage() {
   )
 }
 
-function StatCard({ icon, label, value, color }) {
+function StatCard({ icon, label, value, color, onClick }) {
   const colors = {
     brand: { bg: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.25)', text: '#fbbf24' },
     violet: { bg: 'rgba(217,119,6,0.1)', border: 'rgba(217,119,6,0.25)', text: '#f59e0b' },
@@ -458,7 +406,11 @@ function StatCard({ icon, label, value, color }) {
   }
   const c = colors[color]
   return (
-    <div className="stat-card" style={{ background: c.bg, border: `1px solid ${c.border}` }}>
+    <div 
+      className="stat-card" 
+      style={{ background: c.bg, border: `1px solid ${c.border}`, cursor: onClick ? 'pointer' : 'default' }}
+      onClick={onClick}
+    >
       <div className="stat-icon" style={{ color: c.text }}>
         {icon}
       </div>

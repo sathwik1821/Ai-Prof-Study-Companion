@@ -1,0 +1,205 @@
+.spaces-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 1120px;
+}
+
+.spaces-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.spaces-title {
+  font-family: var(--font-heading);
+  font-size: 28px;
+  font-weight: 800;
+  color: #f8fafc;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 4px;
+  letter-spacing: -0.02em;
+}
+
+.spaces-count-pill {
+  font-size: 13px;
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.28);
+  color: #fbbf24;
+}
+
+.spaces-sub {
+  color: var(--text-secondary);
+  font-size: 14.5px;
+}
+
+.spaces-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.spaces-search-box {
+  position: relative;
+  flex: 1;
+  max-width: 420px;
+}
+
+.spaces-search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #64748b;
+  pointer-events: none;
+}
+
+.spaces-search-input {
+  width: 100%;
+  padding: 10px 14px 10px 38px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 12px;
+  color: #f8fafc;
+  font-size: 13.5px;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.spaces-search-input:focus {
+  border-color: rgba(245, 158, 11, 0.5);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.15);
+}
+
+.spaces-loading-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.spaces-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.space-card {
+  padding: 22px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border-radius: 16px;
+  min-height: 160px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.space-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(245, 158, 11, 0.35);
+  box-shadow: 0 12px 28px -6px rgba(0, 0, 0, 0.45);
+}
+
+.space-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.space-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fbbf24;
+}
+
+.space-delete {
+  color: #64748b;
+  opacity: 0;
+  transition: all 0.2s ease;
+}
+
+.space-card:hover .space-delete {
+  opacity: 1;
+}
+
+.space-delete:hover {
+  color: #f43f5e;
+  background: rgba(244, 63, 94, 0.1);
+}
+
+.space-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #f8fafc;
+  margin: 0 0 6px;
+}
+
+.space-desc {
+  font-size: 13px;
+  color: #94a3b8;
+  line-height: 1.5;
+  margin-bottom: 16px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.space-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.space-arrow {
+  color: #64748b;
+  transition: transform 0.2s ease;
+}
+
+.space-card:hover .space-arrow {
+  color: #fbbf24;
+  transform: translateX(3px);
+}
+
+.space-card-add {
+  min-height: 160px;
+  border-radius: 16px;
+  border: 1.5px dashed rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.015);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: #94a3b8;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.space-card-add:hover {
+  background: rgba(245, 158, 11, 0.04);
+  border-color: rgba(245, 158, 11, 0.4);
+  color: #fbbf24;
+  transform: translateY(-2px);
+}

@@ -1,15 +1,16 @@
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useState } from 'react'
 import {
-  LayoutDashboard, BarChart2, LogOut, Menu, X, GraduationCap, ChevronRight, Shield
+  LayoutDashboard, Folder, BarChart2, LogOut, Menu, X, GraduationCap, ChevronRight, Shield
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import './DashboardLayout.css'
 
 const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/analytics',  icon: BarChart2,       label: 'Analytics' },
-  { to: '/admin',      icon: Shield,          label: 'Admin Hub', adminOnly: true },
+  { to: '/spaces',    icon: Folder,          label: 'My Spaces' },
+  { to: '/analytics', icon: BarChart2,       label: 'Analytics' },
+  { to: '/admin',     icon: Shield,          label: 'Admin Hub', adminOnly: true },
 ]
 
 export default function DashboardLayout() {

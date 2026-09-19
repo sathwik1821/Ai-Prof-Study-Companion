@@ -8,6 +8,7 @@ import OtpVerifyPage from './pages/OtpVerifyPage'
 import DashboardLayout from './layouts/DashboardLayout'
 import DashboardPage from './pages/DashboardPage'
 import SpacePage from './pages/SpacePage'
+import SpacesPage from './pages/SpacesPage'
 import ProjectPage from './pages/ProjectPage'
 import TutorPage from './pages/TutorPage'
 import QuizPage from './pages/QuizPage'
@@ -67,6 +68,7 @@ export default function App() {
           <Route path="/" element={<PrivateRoute><DashboardLayout /></PrivateRoute>}>
             <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="dashboard"                           element={<DashboardPage />} />
+            <Route path="spaces"                              element={<SpacesPage />} />
             <Route path="analytics"                           element={<AnalyticsPage />} />
             <Route path="profile"                             element={<ProfilePage />} />
             <Route path="admin"  element={<AdminRoute><AdminPage /></AdminRoute>} />

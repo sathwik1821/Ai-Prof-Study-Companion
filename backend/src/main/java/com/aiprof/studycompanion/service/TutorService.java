@@ -17,6 +17,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,6 +39,7 @@ public class TutorService {
     private final AIService aiService;
     private final MasteryService masteryService;
     private final ObjectMapper objectMapper;
+    private final com.aiprof.studycompanion.repository.MaterialRepository materialRepository;
 
     @Transactional
     public TutorResponse askTutor(UUID projectId, UUID userId, TutorRequest request) {
@@ -46,6 +48,10 @@ public class TutorService {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND, "User not found"));
+
+        if (materialRepository.countByProjectId(projectId) == 0) {
+            throw new AppException(HttpStatus.BAD_REQUEST, "NO_MATERIALS", "Please upload study materials before chatting with the AI Tutor.");
+        }
 
         Conversation conversation = null;
         if (request.getConversationId() != null) {

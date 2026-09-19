@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { tutorApi } from '../api'
+import { tutorApi, materialsApi } from '../api'
 import {
   ArrowLeft, Send, Brain, Plus, Trash2, MessageSquare,
-  Lightbulb, ChevronDown
+  Lightbulb, ChevronDown, FileText, Upload
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import ReactMarkdown from 'react-markdown'
@@ -21,16 +21,23 @@ export default function TutorPage() {
   const [sending,       setSending]              = useState(false)
   const [loadingConvs,  setLoadingConvs]         = useState(true)
   const [loadingMsgs,   setLoadingMsgs]          = useState(false)
+  const [materials,     setMaterials]            = useState([])
+  const [loadingMaterials, setLoadingMaterials]  = useState(true)
 
   const messagesEndRef = useRef(null)
   const textareaRef    = useRef(null)
 
-  // Load conversations
+  // Load conversations and materials
   useEffect(() => {
     tutorApi.conversations(projectId)
       .then(res => setConversations(res.data.data ?? []))
       .catch(() => {})
       .finally(() => setLoadingConvs(false))
+
+    materialsApi.list(projectId)
+      .then(res => setMaterials(res.data.data ?? []))
+      .catch(() => {})
+      .finally(() => setLoadingMaterials(false))
   }, [projectId])
 
   // Load messages when conversation changes
@@ -51,6 +58,10 @@ export default function TutorPage() {
   const sendMessage = async () => {
     const text = input.trim()
     if (!text || sending) return
+    if (materials.length === 0) {
+      toast.error('Please upload at least one study document first')
+      return
+    }
     setInput('')
     setSending(true)
 
@@ -154,7 +165,34 @@ export default function TutorPage() {
 
         {/* Messages */}
         <div className="messages-area">
-          {messages.length === 0 && !loadingMsgs ? (
+          {!loadingMaterials && materials.length === 0 ? (
+            <div className="chat-welcome" style={{ maxWidth: 520, margin: '40px auto', textAlign: 'center' }}>
+              <div className="chat-welcome-icon" style={{ background: 'rgba(245, 158, 11, 0.12)', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
+                <FileText size={36} color="#fbbf24" />
+              </div>
+              <h2 style={{ fontSize: 20, fontWeight: 700, color: '#f8fafc', margin: '14px 0 8px' }}>
+                No Course Materials Uploaded
+              </h2>
+              <p style={{ fontSize: 13.5, color: '#94a3b8', lineHeight: 1.6, marginBottom: 24 }}>
+                The Socratic AI Tutor requires your course notes, lecture slides, or textbooks to ground its responses with exact citations and eliminate hallucinations. Upload at least one document to start.
+              </p>
+              <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+                <button 
+                  className="btn btn-primary"
+                  onClick={() => navigate(`/spaces/${spaceId}/projects/${projectId}/materials`)}
+                  style={{ gap: 8 }}
+                >
+                  <Upload size={16} /> Upload Study Materials
+                </button>
+                <button 
+                  className="btn btn-secondary"
+                  onClick={() => navigate(`/spaces/${spaceId}/projects/${projectId}`)}
+                >
+                  Project Overview
+                </button>
+              </div>
+            </div>
+          ) : messages.length === 0 && !loadingMsgs ? (
             <div className="chat-welcome">
               <div className="chat-welcome-icon">
                 <Brain size={32}/>
@@ -217,22 +255,47 @@ export default function TutorPage() {
 
         {/* Input */}
         <div className="chat-input-area">
+          {!loadingMaterials && materials.length === 0 && (
+            <div style={{
+              background: 'rgba(245, 158, 11, 0.08)',
+              border: '1px solid rgba(245, 158, 11, 0.22)',
+              borderRadius: 10,
+              padding: '8px 14px',
+              marginBottom: 10,
+              fontSize: 12.5,
+              color: '#fbbf24',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 8
+            }}>
+              <span>Upload course documents to unlock chatting with your AI Tutor.</span>
+              <button 
+                className="btn btn-sm btn-primary"
+                onClick={() => navigate(`/spaces/${spaceId}/projects/${projectId}/materials`)}
+                style={{ padding: '4px 10px', fontSize: 12 }}
+              >
+                Upload Now
+              </button>
+            </div>
+          )}
           <div className="chat-input-wrap">
             <textarea
               ref={textareaRef}
               id="tutor-input"
               className="chat-textarea"
-              placeholder="Ask your tutor anything… (Enter to send, Shift+Enter for new line)"
+              placeholder={materials.length === 0 && !loadingMaterials ? "Upload course materials above to enable the AI Tutor..." : "Ask your tutor anything… (Enter to send, Shift+Enter for new line)"}
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
+              disabled={materials.length === 0 || sending}
               rows={1}
             />
             <button
               id="tutor-send-btn"
-              className={`btn btn-primary btn-icon chat-send ${!input.trim() || sending ? 'disabled' : ''}`}
+              className={`btn btn-primary btn-icon chat-send ${!input.trim() || sending || materials.length === 0 ? 'disabled' : ''}`}
               onClick={sendMessage}
-              disabled={!input.trim() || sending}
+              disabled={!input.trim() || sending || materials.length === 0}
             >
               {sending ? <span className="spinner" style={{width:16,height:16}}/> : <Send size={16}/>}
             </button>

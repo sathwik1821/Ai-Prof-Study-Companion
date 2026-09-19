@@ -18,6 +18,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,6 +40,7 @@ public class AssessmentService {
     private final AIService aiService;
     private final KnowledgeRetrievalService retrievalService;
     private final ObjectMapper objectMapper;
+    private final com.aiprof.studycompanion.repository.MaterialRepository materialRepository;
 
     @Transactional
     public AssessmentResultDto submitAssessment(UUID projectId, UUID userId, AssessmentRequest request) {
@@ -47,6 +49,10 @@ public class AssessmentService {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND, "User not found"));
+
+        if (materialRepository.countByProjectId(projectId) == 0) {
+            throw new AppException(HttpStatus.BAD_REQUEST, "NO_MATERIALS", "Please upload study materials before taking open-ended assessments.");
+        }
 
         masteryService.ensureConceptsExist(project, user);
 
@@ -139,6 +145,10 @@ public class AssessmentService {
     public com.aiprof.studycompanion.dto.assessment.ChallengeQuestionDto generateChallenge(UUID projectId, UUID userId) {
         Project project = projectRepository.findByIdAndUserId(projectId, userId)
                 .orElseThrow(() -> new AppException(ErrorCode.PROJECT_NOT_FOUND, "Project not found: " + projectId));
+
+        if (materialRepository.countByProjectId(projectId) == 0) {
+            throw new AppException(HttpStatus.BAD_REQUEST, "NO_MATERIALS", "Please upload study materials before generating open-ended assessments.");
+        }
 
         List<com.aiprof.studycompanion.dto.knowledge.RetrievedChunk> chunks =
                 retrievalService.retrieveRelevantChunks(projectId, project.getName(), 3);

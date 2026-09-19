@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { quizApi, assessmentApi } from '../api'
+import { quizApi, assessmentApi, materialsApi } from '../api'
 import {
   ArrowLeft, BarChart2, CheckCircle, XCircle, Trophy, RefreshCw,
-  ChevronRight, FileText, Sparkles, Send, Award, BookOpen, AlertCircle
+  ChevronRight, FileText, Sparkles, Send, Award, BookOpen, AlertCircle,
+  Upload
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import './QuizPage.css'
@@ -23,6 +24,8 @@ export default function QuizPage() {
   const [history,     setHistory]    = useState([])
   const [loadingHist, setLoadingHist]= useState(true)
   const [starting,    setStarting]   = useState(false)
+  const [materials,   setMaterials]  = useState([])
+  const [loadingMaterials, setLoadingMaterials] = useState(true)
 
   // Open-ended assessment state
   const [promptInput, setPromptInput] = useState('Explain the core mechanics and system architecture presented in your materials.')
@@ -59,6 +62,11 @@ export default function QuizPage() {
       .catch(() => {})
       .finally(() => setLoadingHist(false))
 
+    materialsApi.list(projectId)
+      .then(res => setMaterials(res.data.data ?? []))
+      .catch(() => {})
+      .finally(() => setLoadingMaterials(false))
+
     loadAssessments()
   }, [projectId])
 
@@ -92,6 +100,10 @@ export default function QuizPage() {
   }
 
   const startQuiz = async (count = 3) => {
+    if (materials.length === 0) {
+      toast.error('Please upload course materials before taking a quiz')
+      return
+    }
     setStarting(true)
     try {
       const res = await quizApi.start(projectId, { questionCount: typeof count === 'number' ? count : 3 })
@@ -285,8 +297,8 @@ export default function QuizPage() {
         </div>
       </div>
 
-      {/* Mode Switcher */}
-      <div className="quiz-mode-selector">
+      {/* TAB SWITCHER */}
+      <div className="quiz-mode-tabs">
         <button
           className={`quiz-mode-btn ${activeTab === 'mcq' ? 'active' : ''}`}
           onClick={() => setActiveTab('mcq')}
@@ -301,6 +313,36 @@ export default function QuizPage() {
         </button>
       </div>
 
+      {/* EMPTY MATERIALS GATE */}
+      {!loadingMaterials && materials.length === 0 ? (
+        <div className="card" style={{ padding: '48px 32px', textAlign: 'center', maxWidth: 560, margin: '20px auto' }}>
+          <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(245, 158, 11, 0.12)', border: '1px solid rgba(245, 158, 11, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+            <FileText size={32} color="#fbbf24" />
+          </div>
+          <h2 style={{ fontSize: 20, fontWeight: 700, color: '#f8fafc', marginBottom: 8 }}>
+            No Course Documents Uploaded Yet
+          </h2>
+          <p style={{ fontSize: 13.5, color: '#94a3b8', lineHeight: 1.6, marginBottom: 24 }}>
+            Adaptive practice quizzes and open-ended cognitive evaluations require uploaded lecture slides, notes, or course PDFs to identify concepts, evaluate responses, and trace your evolving mastery.
+          </p>
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+            <button 
+              className="btn btn-primary"
+              onClick={() => navigate(`/spaces/${spaceId}/projects/${projectId}/materials`)}
+              style={{ gap: 8 }}
+            >
+              <Upload size={16} /> Upload Study Materials
+            </button>
+            <button 
+              className="btn btn-secondary"
+              onClick={() => navigate(`/spaces/${spaceId}/projects/${projectId}`)}
+            >
+              Project Overview
+            </button>
+          </div>
+        </div>
+      ) : (
+        <>
       {/* TAB 1: MCQ QUIZ */}
       {activeTab === 'mcq' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
@@ -645,6 +687,8 @@ export default function QuizPage() {
             )}
           </div>
         </div>
+      )}
+        </>
       )}
     </div>
   )
