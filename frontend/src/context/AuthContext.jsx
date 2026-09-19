@@ -36,7 +36,14 @@ export function AuthProvider({ children }) {
 
   const register = async (email, password, fullName) => {
     const res = await authApi.register({ email, password, fullName })
-    return res.data?.data?.user
+    const data = res.data?.data
+    // If backend returns a token (auto-verified), log in immediately
+    if (data?.token) {
+      localStorage.setItem('token', data.token)
+      if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken)
+      setUser(data.user)
+    }
+    return data?.user
   }
 
   const verifyOtp = async (email, otp) => {

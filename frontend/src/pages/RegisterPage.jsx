@@ -46,9 +46,14 @@ export default function RegisterPage() {
 
     setLoading(true)
     try {
-      await register(form.email, form.password, form.fullName)
-      toast.success('Verification code sent to your email!')
-      navigate(`/verify-otp?email=${encodeURIComponent(form.email.trim())}`)
+      const u = await register(form.email, form.password, form.fullName)
+      if (u?.emailVerified) {
+        toast.success('Account created! Welcome to AiProf 🎉')
+        navigate('/dashboard')
+      } else {
+        toast.success('Verification code sent to your email!')
+        navigate(`/verify-otp?email=${encodeURIComponent(form.email.trim())}`)
+      }
     } catch (err) {
       toast.error(err.response?.data?.message ?? 'Registration failed')
     } finally {
