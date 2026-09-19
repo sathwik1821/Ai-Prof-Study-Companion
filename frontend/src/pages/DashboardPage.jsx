@@ -78,19 +78,6 @@ export default function DashboardPage() {
     }
   }
 
-  const hour = new Date().getHours()
-  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
-
-  if (loading) {
-    return (
-      <div className="dash-loading">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="skeleton" style={{ height: 120, borderRadius: 16 }} />
-        ))}
-      </div>
-    )
-  }
-
   const mostRecentProject = analytics?.recentProjects?.[0]
   const nextAction = analytics?.nextRecommendedAction
   const topWeakConcept = analytics?.weakestConcepts?.[0]
@@ -159,6 +146,19 @@ export default function DashboardPage() {
     }
     return null
   }, [nextAction, topWeakConcept, weakestProject, spaces, navigate])
+
+  const hour = new Date().getHours()
+  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
+
+  if (loading) {
+    return (
+      <div className="dash-loading">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="skeleton" style={{ height: 120, borderRadius: 16 }} />
+        ))}
+      </div>
+    )
+  }
 
   return (
     <div className="dash-page">
