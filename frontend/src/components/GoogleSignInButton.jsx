@@ -9,8 +9,10 @@ export default function GoogleSignInButton({ mode = 'signin' }) {
   const navigate = useNavigate()
   const buttonDivRef = useRef(null)
   const [loading, setLoading] = useState(false)
+  const [gsiRendered, setGsiRendered] = useState(false)
 
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '420129371421-b880kb1kth6j6ge47vo94o9ronn8de31.apps.googleusercontent.com'
+  const CANONICAL_HOST = 'ai-prof-study-companion.vercel.app'
 
   useEffect(() => {
     if (!clientId) return
@@ -37,6 +39,15 @@ export default function GoogleSignInButton({ mode = 'signin' }) {
           logo_alignment: 'left',
           width: 320,
         })
+
+        // Check if GSI actually mounted the iframe button inside the container
+        const checkRenderTimer = setTimeout(() => {
+          if (buttonDivRef.current && buttonDivRef.current.children.length > 0) {
+            setGsiRendered(true)
+          }
+        }, 500)
+
+        return () => clearTimeout(checkRenderTimer)
       } catch (err) {
         console.warn('GSI render error:', err)
       }
@@ -75,6 +86,13 @@ export default function GoogleSignInButton({ mode = 'signin' }) {
   }
 
   const handleManualClick = () => {
+    // If on a non-canonical Vercel preview/branch URL, redirect to canonical production domain
+    if (typeof window !== 'undefined' && window.location.hostname.endsWith('.vercel.app') && window.location.hostname !== CANONICAL_HOST) {
+      toast.loading('Redirecting to authorized production domain for Google Sign-In...')
+      window.location.replace(`https://${CANONICAL_HOST}${window.location.pathname}${window.location.search}${window.location.hash}`)
+      return
+    }
+
     if (!clientId) {
       toast(
         'Google OAuth endpoint is active on backend! To enable popup, add VITE_GOOGLE_CLIENT_ID to your environment.',
@@ -85,6 +103,8 @@ export default function GoogleSignInButton({ mode = 'signin' }) {
 
     if (window.google && window.google.accounts && window.google.accounts.id) {
       window.google.accounts.id.prompt()
+    } else {
+      toast.error('Google Sign-In is initializing. Please try again in a moment.')
     }
   }
 
@@ -93,11 +113,11 @@ export default function GoogleSignInButton({ mode = 'signin' }) {
       {/* If Google GSI rendered a native button and clientId exists */}
       <div 
         ref={buttonDivRef} 
-        className={`google-native-btn-container ${!clientId ? 'google-hidden' : ''}`}
+        className={`google-native-btn-container ${(!clientId || !gsiRendered) ? 'google-hidden' : ''}`}
       />
 
-      {/* Fallback branded button if clientId is missing or script hasn't rendered */}
-      {(!clientId || loading) && (
+      {/* Fallback branded button if clientId is missing, GSI didn't mount, or during loading */}
+      {(!clientId || !gsiRendered || loading) && (
         <button
           type="button"
           className="google-btn-custom"

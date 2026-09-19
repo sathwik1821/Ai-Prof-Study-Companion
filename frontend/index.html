@@ -9,6 +9,23 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <!-- Canonical Domain Enforcement for Vercel Deployments:
+         Prevents Google OAuth "Error 400: origin_mismatch" by automatically redirecting
+         dynamic preview/branch URLs to the pre-authorized canonical production domain. -->
+    <script>
+      (function() {
+        try {
+          var host = window.location.hostname;
+          var canonicalHost = 'ai-prof-study-companion.vercel.app';
+          if (host.endsWith('.vercel.app') && host !== canonicalHost) {
+            var target = 'https://' + canonicalHost + window.location.pathname + window.location.search + window.location.hash;
+            window.location.replace(target);
+          }
+        } catch (e) {
+          console.warn('Canonical redirect check:', e);
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
