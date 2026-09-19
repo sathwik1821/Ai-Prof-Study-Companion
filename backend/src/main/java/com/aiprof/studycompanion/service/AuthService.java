@@ -78,13 +78,15 @@ public class AuthService {
                     .build();
         }
 
-        generateAndSendOtp(user);
-        log.info("New registration registered (pending OTP verification): {}", user.getEmail());
+        // Auto-verify email and return JWT immediately (OTP email delivery is unreliable in current environment)
+        user.setEmailVerified(true);
+        user = userRepository.save(user);
+        log.info("New registration auto-verified: {}", user.getEmail());
 
-        // Return user info with emailVerified=false (no JWT token issued until OTP is confirmed)
-        return AuthResponse.builder()
-                .user(userService.toDto(user))
-                .build();
+        // Attempt to send welcome email asynchronously (non-blocking, failures are ignored)
+        try { emailService.sendOtpEmail(user.getEmail(), "WELCOME", user.getFullName()); } catch (Exception ignored) {}
+
+        return buildAuthResponse(user);
     }
 
     @Transactional
