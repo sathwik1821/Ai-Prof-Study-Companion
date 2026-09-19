@@ -10,7 +10,7 @@ export default function GoogleSignInButton({ mode = 'signin' }) {
   const buttonDivRef = useRef(null)
   const [loading, setLoading] = useState(false)
 
-  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || ''
+  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '420129371421-b880kb1kth6j6ge47vo94o9ronn8de31.apps.googleusercontent.com'
 
   useEffect(() => {
     if (!clientId) return
