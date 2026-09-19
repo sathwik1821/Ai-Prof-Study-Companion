@@ -105,6 +105,7 @@ export default api
 export const authApi = {
   register:  (data) => api.post('/auth/register', data),
   login:     (data) => api.post('/auth/login', data),
+  google:    (data) => api.post('/auth/google', data),
   verifyOtp: (data) => api.post('/auth/verify-otp', data),
   resendOtp: (data) => api.post('/auth/resend-otp', data),
   refresh:   (refreshToken) => api.post('/auth/refresh', { refreshToken }),

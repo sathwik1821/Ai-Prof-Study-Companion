@@ -14,6 +14,7 @@ import {
   KeyRound
 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import GoogleSignInButton from '../components/GoogleSignInButton'
 import './AuthPage.css'
 
 const FLOATING_DOTS = Array.from({ length: 14 }, (_, i) => ({
@@ -171,6 +172,12 @@ export default function LoginPage() {
           <h2 className="auth-form-title">Welcome back</h2>
           <p className="auth-form-desc">Authenticate to access your spaces, projects, and AI tutor.</p>
 
+          {/* Google Sign-In */}
+          <GoogleSignInButton mode="signin" />
+
+          <div className="auth-divider">
+            <span>or continue with email</span>
+          </div>
 
           {/* Interactive Form */}
           <form className="auth-form-fields" onSubmit={handleSubmit}>

@@ -2,6 +2,7 @@ package com.aiprof.studycompanion.controller;
 
 import com.aiprof.studycompanion.common.ApiResponse;
 import com.aiprof.studycompanion.dto.auth.AuthResponse;
+import com.aiprof.studycompanion.dto.auth.GoogleAuthRequest;
 import com.aiprof.studycompanion.dto.auth.LoginRequest;
 import com.aiprof.studycompanion.dto.auth.LogoutRequest;
 import com.aiprof.studycompanion.dto.auth.RefreshTokenRequest;
@@ -60,6 +61,14 @@ public class AuthController {
     ) {
         AuthResponse response = authService.login(request);
         return ResponseEntity.ok(ApiResponse.success(response, "Logged in successfully"));
+    }
+
+    @PostMapping("/google")
+    public ResponseEntity<ApiResponse<AuthResponse>> googleLogin(
+            @Valid @RequestBody GoogleAuthRequest request
+    ) {
+        AuthResponse response = authService.googleLogin(request);
+        return ResponseEntity.ok(ApiResponse.success(response, "Authenticated with Google successfully"));
     }
 
     @PostMapping("/refresh")

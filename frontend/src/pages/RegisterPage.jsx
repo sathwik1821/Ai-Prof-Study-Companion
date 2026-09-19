@@ -15,6 +15,7 @@ import {
   UserPlus
 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import GoogleSignInButton from '../components/GoogleSignInButton'
 import './AuthPage.css'
 
 const FLOATING_DOTS = Array.from({ length: 14 }, (_, i) => ({
@@ -175,6 +176,12 @@ export default function RegisterPage() {
           <h2 className="auth-form-title">Get started today</h2>
           <p className="auth-form-desc">Create your student account to start building spaces and tracking mastery.</p>
 
+          {/* Google Sign-In */}
+          <GoogleSignInButton mode="signup" />
+
+          <div className="auth-divider">
+            <span>or continue with email</span>
+          </div>
 
           {/* Interactive Form */}
           <form className="auth-form-fields" onSubmit={handleSubmit}>

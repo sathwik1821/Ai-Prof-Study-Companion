@@ -7,6 +7,7 @@ import com.aiprof.studycompanion.dto.auth.RefreshTokenRequest;
 import com.aiprof.studycompanion.dto.auth.RegisterRequest;
 import com.aiprof.studycompanion.dto.auth.ResendOtpRequest;
 import com.aiprof.studycompanion.dto.auth.VerifyOtpRequest;
+import com.aiprof.studycompanion.dto.auth.GoogleAuthRequest;
 import com.aiprof.studycompanion.entity.RefreshToken;
 import com.aiprof.studycompanion.entity.User;
 import com.aiprof.studycompanion.exception.AppException;
@@ -16,13 +17,16 @@ import com.aiprof.studycompanion.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -153,6 +157,58 @@ public class AuthService {
         }
 
         log.info("User logged in: {}", user.getEmail());
+        return buildAuthResponse(user);
+    }
+
+    @Transactional
+    public AuthResponse googleLogin(GoogleAuthRequest request) {
+        if (request == null || request.getIdToken() == null || request.getIdToken().isBlank()) {
+            throw AppException.badRequest("INVALID_TOKEN", "Google ID token is required");
+        }
+
+        Map<String, Object> tokenInfo;
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+            String url = "https://oauth2.googleapis.com/tokeninfo?id_token=" + request.getIdToken().trim();
+            ResponseEntity<Map> response = restTemplate.getForEntity(url, Map.class);
+            tokenInfo = response.getBody();
+        } catch (Exception e) {
+            log.warn("Failed to verify Google ID token: {}", e.getMessage());
+            throw AppException.unauthorized("INVALID_GOOGLE_TOKEN", "Invalid or expired Google authentication token");
+        }
+
+        if (tokenInfo == null || !tokenInfo.containsKey("email")) {
+            throw AppException.unauthorized("INVALID_GOOGLE_TOKEN", "Google account does not have a verified email address");
+        }
+
+        String email = ((String) tokenInfo.get("email")).toLowerCase().trim();
+        String name = (String) tokenInfo.get("name");
+
+        Optional<User> userOpt = userRepository.findByEmailIgnoreCase(email);
+        User user;
+
+        if (userOpt.isPresent()) {
+            user = userOpt.get();
+            if (!user.isEmailVerified()) {
+                user.setEmailVerified(true);
+            }
+            if ((user.getFullName() == null || user.getFullName().isBlank()) && name != null) {
+                user.setFullName(name.trim());
+            }
+            user = userRepository.save(user);
+            log.info("Existing user logged in via Google: {}", email);
+        } else {
+            user = User.builder()
+                    .email(email)
+                    .fullName(name != null ? name.trim() : email.split("@")[0])
+                    .passwordHash(passwordEncoder.encode(UUID.randomUUID().toString()))
+                    .role("USER")
+                    .emailVerified(true)
+                    .build();
+            user = userRepository.save(user);
+            log.info("New user created and logged in via Google: {}", email);
+        }
+
         return buildAuthResponse(user);
     }
 
