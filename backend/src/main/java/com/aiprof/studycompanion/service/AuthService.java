@@ -152,12 +152,6 @@ public class AuthService {
             throw AppException.badRequest("INVALID_CREDENTIALS", "Invalid email or password");
         }
 
-        if (!user.isEmailVerified()) {
-            // Trigger a fresh OTP email automatically for smooth onboarding
-            generateAndSendOtp(user);
-            throw AppException.badRequest("EMAIL_NOT_VERIFIED", "Your email address is not verified yet. A new 6-digit verification code has been sent to your inbox.");
-        }
-
         log.info("User logged in: {}", user.getEmail());
         return buildAuthResponse(user);
     }
