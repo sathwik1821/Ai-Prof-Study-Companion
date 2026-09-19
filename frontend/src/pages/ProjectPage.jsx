@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { projectsApi, recommendationsApi, materialsApi, masteryApi } from '../api'
 import {
   ArrowLeft, Brain, BarChart2, Upload, BookOpen, Target, Zap,
-  CheckCircle, XCircle, TrendingUp, ChevronRight, AlertTriangle, Activity, Pencil
+  CheckCircle, XCircle, TrendingUp, ChevronRight, AlertTriangle, Activity, Pencil, Sparkles
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import Modal from '../components/Modal'
@@ -227,15 +227,35 @@ export default function ProjectPage() {
           </div>
 
           {masteries.length === 0 ? (
-            <div className="empty-state" style={{ padding: '24px 0' }}>
-              <Brain size={32} className="empty-state-icon" />
-              <p>Start a quiz or ask the tutor to generate concept mastery tracking.</p>
+            <div className="empty-state card" style={{ padding: '36px 20px', textAlign: 'center', background: 'rgba(15, 20, 30, 0.45)' }}>
+              <Brain size={42} className="empty-state-icon" style={{ color: 'var(--brand-400)', opacity: 0.85, margin: '0 auto 10px' }} />
+              <h4 style={{ color: '#f8fafc', margin: '4px 0 6px', fontSize: 17, fontWeight: 700 }}>No concepts identified yet</h4>
+              <p style={{ maxWidth: 480, margin: '0 auto 20px', fontSize: 13.5, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                Upload lecture slides or notes to automatically extract key syllabus topics, or start a diagnostic quiz to benchmark your knowledge.
+              </p>
+              <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+                <button 
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => navigate(`/spaces/${spaceId}/projects/${projectId}/materials`)}
+                  style={{ gap: 6 }}
+                >
+                  <Upload size={14} /> Upload Materials
+                </button>
+                <button 
+                  className="btn btn-primary btn-sm"
+                  onClick={() => navigate(`/spaces/${spaceId}/projects/${projectId}/quiz`)}
+                  style={{ gap: 6 }}
+                >
+                  <BarChart2 size={14} /> Start Diagnostic Quiz
+                </button>
+              </div>
             </div>
           ) : (
             <div className="concept-grid">
               {masteries.map(m => {
                 const score = Math.round(m.masteryScore || 0)
                 const status = m.growthStatus || 'STABLE'
+                const isUnassessed = status === 'UNASSESSED' || (m.evidenceCount === 0 && score === 0)
                 return (
                   <div key={m.id} className="concept-card">
                     <div className="concept-header">
@@ -249,6 +269,7 @@ export default function ProjectPage() {
                         {status === 'IMPROVING' && <><TrendingUp size={12} /> Improving</>}
                         {status === 'STABLE' && <><Activity size={12} /> Stable</>}
                         {status === 'REQUIRING_ATTENTION' && <><AlertTriangle size={12} /> Needs Attention</>}
+                        {isUnassessed && <><Sparkles size={12} /> Unassessed</>}
                       </div>
                     </div>
 
@@ -257,16 +278,17 @@ export default function ProjectPage() {
                         <span className="evidence-chip">
                           {m.evidenceCount || 0} {m.evidenceCount === 1 ? 'assessment' : 'assessments'}
                         </span>
-                        <span className="concept-pct">{score}%</span>
+                        <span className="concept-pct">{isUnassessed ? '0%' : `${score}%`}</span>
                       </div>
                       <div className="progress-track" style={{ height: 8 }}>
                         <div
                           className="progress-fill"
                           style={{
-                            width: `${score}%`,
+                            width: isUnassessed ? '0%' : `${score}%`,
                             background:
                               status === 'IMPROVING' ? 'var(--accent-emerald)'
                               : status === 'REQUIRING_ATTENTION' ? 'var(--accent-rose)'
+                              : isUnassessed ? 'var(--text-muted)'
                               : 'var(--brand-500)'
                           }}
                         />

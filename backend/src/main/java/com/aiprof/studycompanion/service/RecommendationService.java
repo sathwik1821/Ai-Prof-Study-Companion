@@ -34,8 +34,6 @@ public class RecommendationService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND, "User not found"));
 
-        masteryService.ensureConceptsExist(project, user);
-
         List<Recommendation> active = recommendationRepository.findByProjectIdAndUserIdAndStatus(projectId, userId, "ACTIVE");
         if (active.isEmpty()) {
             active = generateNextBestActions(project, user);
@@ -65,8 +63,12 @@ public class RecommendationService {
         }
 
         List<ConceptMastery> weakConcepts = masteryService.getWeakestConcepts(project.getId(), user.getId());
-        if (!weakConcepts.isEmpty()) {
-            ConceptMastery weakest = weakConcepts.get(0);
+        List<ConceptMastery> assessedWeak = weakConcepts.stream()
+                .filter(m -> m.getEvidenceCount() != null && m.getEvidenceCount() > 0)
+                .toList();
+
+        if (!assessedWeak.isEmpty()) {
+            ConceptMastery weakest = assessedWeak.get(0);
             Concept c = weakest.getConcept();
 
             if (weakest.getMasteryScore() < 40.0) {
@@ -109,6 +111,30 @@ public class RecommendationService {
                         .build();
                 recommendations.add(recommendationRepository.save(assessRec));
             }
+        } else {
+            Recommendation quizRec = Recommendation.builder()
+                    .project(project)
+                    .user(user)
+                    .type("QUIZ")
+                    .title("Take Diagnostic Quiz")
+                    .description("Take a quick adaptive quiz to test your initial knowledge and benchmark your concept mastery.")
+                    .reason("Benchmark your starting knowledge across " + project.getName() + ".")
+                    .priority(9)
+                    .status("ACTIVE")
+                    .build();
+            recommendations.add(recommendationRepository.save(quizRec));
+
+            Recommendation tutorRec = Recommendation.builder()
+                    .project(project)
+                    .user(user)
+                    .type("TUTOR")
+                    .title("Explore Topics with AI Tutor")
+                    .description("Ask the Socratic tutor questions about your uploaded materials to discover key concepts.")
+                    .reason("Interactive dialogue accelerates conceptual understanding.")
+                    .priority(8)
+                    .status("ACTIVE")
+                    .build();
+            recommendations.add(recommendationRepository.save(tutorRec));
         }
 
         return recommendations;
