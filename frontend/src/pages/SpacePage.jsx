@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { spacesApi, projectsApi } from '../api'
 import {
-  ArrowLeft, Plus, BookOpen, Brain, BarChart2, Trash2, ChevronRight, Target, Pencil
+  ArrowLeft, Plus, BookOpen, Brain, BarChart2, Trash2, ChevronRight, Target, Pencil, Sparkles
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import Modal from '../components/Modal'
@@ -22,6 +22,19 @@ export default function SpacePage() {
   const [showEditSpace, setShowEditSpace] = useState(false)
   const [editSpaceForm, setEditSpaceForm] = useState({ name: '', description: '' })
   const [savingEdit,   setSavingEdit]   = useState(false)
+
+  const handleOpenCreateProject = (prefill) => {
+    if (prefill) {
+      setNewProj({
+        name: prefill.name || '',
+        description: prefill.description || '',
+        learningGoal: prefill.learningGoal || ''
+      })
+    } else {
+      setNewProj({ name: '', description: '', learningGoal: '' })
+    }
+    setShowModal(true)
+  }
 
   useEffect(() => {
     Promise.all([
@@ -232,12 +245,55 @@ export default function SpacePage() {
 
       {/* Projects */}
       {projects.length === 0 ? (
-        <div className="empty-state">
-          <BookOpen size={48} className="empty-state-icon" />
-          <h3>No projects yet</h3>
-          <p>Projects are focused study units inside a space — one per subject or course</p>
-          <button className="btn btn-primary" onClick={() => setShowModal(true)}>
-            <Plus size={16}/> Create first project
+        <div className="empty-state empty-state-projects card">
+          <div className="empty-state-badge">
+            <Sparkles size={13} style={{ color: 'var(--brand-400)' }} />
+            <span>Onboarding: Step 2</span>
+          </div>
+          <BookOpen size={44} className="empty-state-icon" style={{ color: 'var(--brand-400)', opacity: 0.9 }} />
+          <h3 style={{ fontSize: 18, color: '#f8fafc', margin: '6px 0 4px' }}>Add your first study project</h3>
+          <p style={{ maxWidth: 460, color: 'var(--text-secondary)', fontSize: 13.5, margin: '0 auto 16px', lineHeight: 1.5 }}>
+            Projects group specific topics, exam preps, or weekly lecture units inside <strong>{space?.name}</strong>.
+          </p>
+
+          <div className="project-starter-chips" style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 20 }}>
+            <button 
+              type="button" 
+              className="btn btn-secondary btn-sm"
+              onClick={() => handleOpenCreateProject({
+                name: 'Foundational Concepts & Principles',
+                description: 'Core lecture slides, key definitions, and introductory mechanisms.',
+                learningGoal: 'Master all fundamental principles and pass diagnostic quiz'
+              })}
+            >
+              📖 Foundational Concepts
+            </button>
+            <button 
+              type="button" 
+              className="btn btn-secondary btn-sm"
+              onClick={() => handleOpenCreateProject({
+                name: 'Midterm & Exam Preparation',
+                description: 'High-yield topics, practice problems, and weak area reinforcement.',
+                learningGoal: 'Achieve 85%+ mastery before examination'
+              })}
+            >
+              🎯 Midterm & Exam Prep
+            </button>
+            <button 
+              type="button" 
+              className="btn btn-secondary btn-sm"
+              onClick={() => handleOpenCreateProject({
+                name: 'Problem Sets & Lab Assignments',
+                description: 'Hands-on practice exercises, case studies, and calculation walkthroughs.',
+                learningGoal: 'Solve all problem sets independently without hints'
+              })}
+            >
+              🔬 Problem Sets & Labs
+            </button>
+          </div>
+
+          <button className="btn btn-primary" onClick={() => handleOpenCreateProject()}>
+            <Plus size={16}/> Create Custom Project
           </button>
         </div>
       ) : (

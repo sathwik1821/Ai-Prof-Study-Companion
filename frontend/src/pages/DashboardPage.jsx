@@ -14,10 +14,12 @@ import {
   MessageSquare, 
   Clock, 
   FileText,
-  AlertTriangle
+  AlertTriangle,
+  Sparkles
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import Modal from '../components/Modal'
+import OnboardingGuide from '../components/OnboardingGuide'
 import './DashboardPage.css'
 
 export default function DashboardPage() {
@@ -28,8 +30,18 @@ export default function DashboardPage() {
   const [analytics, setAnalytics] = useState(null)
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
+  const [showGuideForced, setShowGuideForced] = useState(false)
   const [newSpace, setNewSpace] = useState({ name: '', description: '' })
   const [saving, setSaving] = useState(false)
+
+  const handleOpenCreateSpace = (prefill) => {
+    if (prefill) {
+      setNewSpace({ name: prefill.name || '', description: prefill.description || '' })
+    } else {
+      setNewSpace({ name: '', description: '' })
+    }
+    setShowModal(true)
+  }
 
   useEffect(() => {
     Promise.all([spacesApi.list(), analyticsApi.overview()])
@@ -102,10 +114,30 @@ export default function DashboardPage() {
             Your personalized AI study companion & cognitive growth workspace
           </p>
         </div>
-        <button id="create-space-btn" className="btn btn-primary" onClick={() => setShowModal(true)}>
-          <Plus size={16} /> New Space
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <button 
+            className="btn btn-secondary btn-sm" 
+            onClick={() => setShowGuideForced(true)}
+            style={{ gap: 6 }}
+            title="Open Onboarding Roadmap & Starter Templates"
+          >
+            <Sparkles size={14} style={{ color: 'var(--brand-400)' }} />
+            <span>Setup Guide</span>
+          </button>
+          <button id="create-space-btn" className="btn btn-primary" onClick={() => handleOpenCreateSpace()}>
+            <Plus size={16} /> New Space
+          </button>
+        </div>
       </div>
+
+      {/* ══════════ ONBOARDING / SETUP ROADMAP ══════════ */}
+      <OnboardingGuide 
+        spaces={spaces} 
+        analytics={analytics} 
+        onOpenCreateSpace={handleOpenCreateSpace}
+        isForcedOpen={showGuideForced}
+        onCloseForced={() => setShowGuideForced(false)}
+      />
 
       {/* ══════════ CONTINUITY GRID ══════════ */}
       {(mostRecentProject || weakestProject) && (
@@ -291,7 +323,7 @@ export default function DashboardPage() {
             <p>
               Spaces are your high-level learning domains — like "Computer Science" or "Organic Chemistry"
             </p>
-            <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+            <button className="btn btn-primary" onClick={() => handleOpenCreateSpace()}>
               <Plus size={16} /> Create your first space
             </button>
           </div>
