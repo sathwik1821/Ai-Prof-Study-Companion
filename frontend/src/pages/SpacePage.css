@@ -1,0 +1,391 @@
+.space-page {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  max-width: 1100px;
+}
+
+/* Breadcrumb */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.breadcrumb-sep { color: var(--border-hover); }
+.breadcrumb-current { color: var(--text-primary); font-weight: 500; }
+
+/* Header */
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.page-title {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.page-sub {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+/* ================================================================
+   SPACE MASTERY INTELLIGENCE BANNER (Frosted Glass)
+   ================================================================ */
+.space-mastery-card {
+  background: rgba(12, 16, 24, 0.72);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-xl);
+  padding: 24px 28px;
+  box-shadow: var(--glass-shadow-lg), 0 0 30px rgba(245, 158, 11, 0.06);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.space-mastery-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(245, 158, 11, 0.4), transparent);
+}
+
+.sm-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.sm-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.sm-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  font-size: 11.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  background: rgba(245, 158, 11, 0.12);
+  color: var(--brand-400);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+.sm-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.sm-subtitle {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+/* Grid layout inside Space Mastery */
+.sm-body-grid {
+  display: grid;
+  grid-template-columns: auto 1fr 1fr;
+  gap: 24px;
+  align-items: center;
+}
+@media (max-width: 900px) {
+  .sm-body-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Circular gauge */
+.sm-gauge-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 18px;
+  background: rgba(18, 24, 34, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-lg);
+  position: relative;
+}
+.sm-gauge-wrap {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.sm-gauge-wrap svg {
+  transform: rotate(-90deg);
+  width: 120px;
+  height: 120px;
+}
+.sm-gauge-bg {
+  stroke: rgba(255, 255, 255, 0.06);
+}
+.sm-gauge-bar {
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1s ease;
+}
+.sm-gauge-text {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.sm-gauge-pct {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+.sm-gauge-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--brand-400);
+}
+
+/* Stats column */
+.sm-metrics-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.sm-metric-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  background: rgba(18, 24, 34, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+.sm-metric-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-secondary);
+}
+.sm-metric-val {
+  font-weight: 700;
+  font-size: 14px;
+}
+.sm-metric-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.dot-emerald { background: var(--accent-emerald); box-shadow: 0 0 8px rgba(16, 185, 129, 0.6); }
+.dot-amber   { background: var(--brand-400); box-shadow: 0 0 8px rgba(245, 158, 11, 0.6); }
+.dot-rose    { background: var(--accent-rose); box-shadow: 0 0 8px rgba(244, 63, 94, 0.6); }
+
+/* Weakest concepts across space */
+.sm-weak-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.sm-col-title {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.sm-weak-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.sm-weak-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 12px;
+  border-radius: var(--radius-sm);
+  background: rgba(244, 63, 94, 0.06);
+  border: 1px solid rgba(244, 63, 94, 0.18);
+  font-size: 12.5px;
+  color: var(--text-secondary);
+}
+.sm-weak-name {
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+.sm-weak-score {
+  font-weight: 700;
+  color: var(--accent-rose);
+  font-size: 12px;
+}
+
+/* Project Mastery Breakdown List */
+.sm-projects-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+.sm-proj-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  background: rgba(18, 24, 34, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all var(--t-fast);
+}
+.sm-proj-row:hover {
+  background: rgba(245, 158, 11, 0.06);
+  border-color: rgba(245, 158, 11, 0.25);
+  transform: translateX(4px);
+}
+.sm-proj-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  min-width: 140px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sm-proj-bar-wrap {
+  flex: 1;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.sm-proj-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #f59e0b, #10b981);
+  transition: width 0.6s ease;
+}
+.sm-proj-pct {
+  font-weight: 700;
+  color: var(--brand-300);
+  font-size: 13px;
+  min-width: 40px;
+  text-align: right;
+}
+
+/* ================================================================
+   PROJECTS GRID & CARDS
+   ================================================================ */
+.projects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 18px;
+}
+
+/* Project card */
+.proj-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 220px;
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 22px;
+  box-shadow: var(--glass-shadow);
+  transition: all var(--t-normal);
+}
+.proj-card:hover {
+  border-color: rgba(245, 158, 11, 0.4);
+  box-shadow: var(--glass-shadow-lg), 0 0 24px rgba(245, 158, 11, 0.12);
+  transform: translateY(-2px);
+}
+.proj-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.proj-delete {
+  opacity: 0;
+  transition: opacity var(--t-fast);
+}
+.proj-card:hover .proj-delete { opacity: 1; }
+.proj-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.proj-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.proj-goal {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--brand-400);
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.18);
+  border-radius: var(--radius-sm);
+  padding: 5px 10px;
+  width: fit-content;
+}
+.proj-stats {
+  display: flex;
+  gap: 14px;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: auto;
+}
+.proj-stats span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.proj-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+.proj-arrow {
+  margin-left: auto;
+  color: var(--text-muted);
+  transition: all var(--t-fast);
+}
+.proj-card:hover .proj-arrow {
+  transform: translateX(3px);
+  color: var(--brand-400);
+}

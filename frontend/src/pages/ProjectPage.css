@@ -1,0 +1,165 @@
+.project-page { display: flex; flex-direction: column; gap: 28px; max-width: 1200px; }
+.proj-page-header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px; }
+.proj-quick-nav { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.proj-page-body {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+@media (max-width: 768px) { .proj-page-body { grid-template-columns: 1fr; } }
+
+.proj-overview { display: flex; flex-direction: column; gap: 16px; }
+
+/* Mastery ring */
+.mastery-card { display: flex; flex-direction: column; gap: 16px; align-items: center; }
+.mastery-ring-wrap { position: relative; display: flex; align-items: center; justify-content: center; }
+.mastery-ring-label {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+}
+.mastery-pct { font-size: 26px; font-weight: 700; color: var(--text-primary); }
+.mastery-txt { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+
+/* Proj stat grid */
+.proj-stat-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 1px; padding: 0; overflow: hidden;
+}
+.proj-stat {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 16px 12px; background: var(--bg-card);
+}
+.proj-stat-icon { color: var(--brand-400); }
+.proj-stat-value { font-size: 22px; font-weight: 700; }
+.proj-stat-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+/* Recs */
+.proj-recs { display: flex; flex-direction: column; }
+.card-section-title { font-size: 14px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;
+  letter-spacing: 0.06em; display: flex; align-items: center; gap: 6px; }
+.recs-list { display: flex; flex-direction: column; gap: 10px; }
+.rec-item { display: flex; align-items: flex-start; gap: 12px; padding: 16px; flex-direction: row; }
+.rec-icon {
+  width: 34px; height: 34px; border-radius: var(--radius-md);
+  background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.25);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--brand-400); flex-shrink: 0;
+}
+.rec-body { flex: 1; }
+.rec-title { font-size: 13.5px; font-weight: 600; margin-bottom: 2px; }
+.rec-desc  { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+.rec-actions { display: flex; gap: 4px; align-items: center; flex-shrink: 0; }
+
+/* Concept Mastery & Growth Breakdown */
+.concept-mastery-section {
+  padding: 20px 24px;
+}
+
+.concept-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.concept-card {
+  background: rgba(18, 24, 34, 0.55);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 14px;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.concept-card:hover {
+  border-color: rgba(245, 158, 11, 0.4);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 16px rgba(245, 158, 11, 0.12);
+  transform: translateY(-2px);
+}
+
+.concept-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.concept-title {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.concept-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.growth-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.growth-tag.improving {
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--accent-emerald);
+}
+
+.growth-tag.stable {
+  background: rgba(34, 211, 238, 0.15);
+  color: #22d3ee;
+}
+
+.growth-tag.requiring_attention {
+  background: rgba(244, 63, 94, 0.15);
+  color: var(--accent-rose);
+}
+
+.concept-meter-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.concept-meter-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.evidence-chip {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.concept-pct {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.concept-card-footer {
+  display: flex;
+  gap: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding-top: 10px;
+}
+

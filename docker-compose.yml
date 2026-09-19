@@ -1,0 +1,26 @@
+version: '3.9'
+
+services:
+
+  # ─── PostgreSQL 16 + pgvector ───────────────────────────────────────────────
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: aiprof-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       ${DATABASE_NAME:-study_companion}
+      POSTGRES_USER:     ${DATABASE_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-postgres}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USERNAME:-postgres} -d ${DATABASE_NAME:-study_companion}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pgdata:
+    name: aiprof-pgdata
