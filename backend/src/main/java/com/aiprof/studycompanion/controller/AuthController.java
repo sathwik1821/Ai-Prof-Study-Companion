@@ -87,4 +87,24 @@ public class AuthController {
         UserDto user = userService.toDto(userService.getById(principal.getUserId()));
         return ResponseEntity.ok(ApiResponse.success(user));
     }
+
+    /**
+     * One-time admin promotion endpoint.
+     * Requires a secret key header: X-Promote-Secret: aiprof-admin-secret-2026
+     * Call this once while logged in to promote your account to ADMIN.
+     */
+    @PostMapping("/promote-admin")
+    public ResponseEntity<ApiResponse<UserDto>> promoteToAdmin(
+            @AuthenticationPrincipal AppUserPrincipal principal,
+            @RequestHeader("X-Promote-Secret") String secret
+    ) {
+        if (!"aiprof-admin-secret-2026".equals(secret)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error("FORBIDDEN", "Invalid secret key"));
+        }
+        com.aiprof.studycompanion.entity.User user = userService.getById(principal.getUserId());
+        user.setRole("ADMIN");
+        userService.save(user);
+        return ResponseEntity.ok(ApiResponse.success(userService.toDto(user), "You are now an ADMIN! Please log out and log back in."));
+    }
 }
