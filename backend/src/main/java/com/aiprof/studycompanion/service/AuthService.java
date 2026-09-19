@@ -17,6 +17,7 @@ import com.aiprof.studycompanion.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -82,15 +83,14 @@ public class AuthService {
                     .build();
         }
 
-        // Auto-verify email and return JWT immediately (OTP email delivery is unreliable in current environment)
-        user.setEmailVerified(true);
+        user.setEmailVerified(false);
         user = userRepository.save(user);
-        log.info("New registration auto-verified: {}", user.getEmail());
+        generateAndSendOtp(user);
+        log.info("New registration created, OTP verification code dispatched to: {}", user.getEmail());
 
-        // Attempt to send welcome email asynchronously (non-blocking, failures are ignored)
-        try { emailService.sendOtpEmail(user.getEmail(), "WELCOME", user.getFullName()); } catch (Exception ignored) {}
-
-        return buildAuthResponse(user);
+        return AuthResponse.builder()
+                .user(userService.toDto(user))
+                .build();
     }
 
     @Transactional
@@ -154,6 +154,12 @@ public class AuthService {
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
             throw AppException.badRequest("INVALID_CREDENTIALS", "Invalid email or password");
+        }
+
+        if (!user.isEmailVerified()) {
+            generateAndSendOtp(user);
+            log.info("Unverified user {} attempted login. Generated and dispatched fresh OTP to email.", user.getEmail());
+            throw new AppException(HttpStatus.FORBIDDEN, "EMAIL_NOT_VERIFIED", "Please verify your email address. A 6-digit verification code has been sent to your inbox.");
         }
 
         log.info("User logged in: {}", user.getEmail());

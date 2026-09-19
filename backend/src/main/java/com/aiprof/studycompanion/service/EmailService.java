@@ -21,6 +21,7 @@ public class EmailService {
 
     @Async
     public void sendOtpEmail(String toEmail, String otpCode, String fullName) {
+        log.info("Dispatching verification OTP [{}] to email {}", otpCode, toEmail);
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
