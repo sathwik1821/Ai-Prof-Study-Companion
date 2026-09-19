@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { spacesApi, projectsApi } from '../api'
 import {
-  ArrowLeft, Plus, BookOpen, Brain, BarChart2, Trash2, ChevronRight, Target
+  ArrowLeft, Plus, BookOpen, Brain, BarChart2, Trash2, ChevronRight, Target, Pencil
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import Modal from '../components/Modal'
@@ -19,6 +19,9 @@ export default function SpacePage() {
   const [showModal,    setShowModal]    = useState(false)
   const [newProj,      setNewProj]      = useState({ name: '', description: '', learningGoal: '' })
   const [saving,       setSaving]       = useState(false)
+  const [showEditSpace, setShowEditSpace] = useState(false)
+  const [editSpaceForm, setEditSpaceForm] = useState({ name: '', description: '' })
+  const [savingEdit,   setSavingEdit]   = useState(false)
 
   useEffect(() => {
     Promise.all([
@@ -61,6 +64,24 @@ export default function SpacePage() {
     } catch { toast.error('Failed to delete project') }
   }
 
+  const openEditSpace = () => {
+    setEditSpaceForm({ name: space?.name || '', description: space?.description || '' })
+    setShowEditSpace(true)
+  }
+
+  const saveEditSpace = async (e) => {
+    e.preventDefault()
+    if (!editSpaceForm.name.trim()) return
+    setSavingEdit(true)
+    try {
+      const res = await spacesApi.update(spaceId, editSpaceForm)
+      setSpace(res.data.data)
+      setShowEditSpace(false)
+      toast.success('Space updated!')
+    } catch { toast.error('Failed to update space') }
+    finally { setSavingEdit(false) }
+  }
+
   const statusColor = (status) => {
     if (status === 'ACTIVE') return 'badge-success'
     if (status === 'COMPLETED') return 'badge-brand'
@@ -95,9 +116,14 @@ export default function SpacePage() {
           <h1 className="page-title">{space?.name}</h1>
           {space?.description && <p className="page-sub">{space.description}</p>}
         </div>
-        <button id="create-project-btn" className="btn btn-primary" onClick={() => setShowModal(true)}>
-          <Plus size={16}/> New Project
-        </button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button className="btn btn-secondary btn-sm" onClick={openEditSpace}>
+            <Pencil size={14} /> Edit Space
+          </button>
+          <button id="create-project-btn" className="btn btn-primary" onClick={() => setShowModal(true)}>
+            <Plus size={16}/> New Project
+          </button>
+        </div>
       </div>
 
       {/* Space Mastery Intelligence Card */}
@@ -260,6 +286,40 @@ export default function SpacePage() {
             </div>
           ))}
         </div>
+      )}
+
+      {/* Edit space modal */}
+      {showEditSpace && (
+        <Modal title="Edit Space" onClose={() => setShowEditSpace(false)}>
+          <form onSubmit={saveEditSpace}>
+            <div style={{display:'flex',flexDirection:'column',gap:14}}>
+              <div className="form-group">
+                <label className="input-label">Space name *</label>
+                <input
+                  className="input"
+                  value={editSpaceForm.name}
+                  onChange={e => setEditSpaceForm(v => ({...v, name: e.target.value}))}
+                  required autoFocus
+                />
+              </div>
+              <div className="form-group">
+                <label className="input-label">Description</label>
+                <textarea
+                  className="input"
+                  rows={3}
+                  value={editSpaceForm.description}
+                  onChange={e => setEditSpaceForm(v => ({...v, description: e.target.value}))}
+                />
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button type="button" className="btn btn-secondary" onClick={() => setShowEditSpace(false)}>Cancel</button>
+              <button type="submit" className="btn btn-primary" disabled={savingEdit}>
+                {savingEdit ? <span className="spinner" style={{width:16,height:16}}/> : 'Save Changes'}
+              </button>
+            </div>
+          </form>
+        </Modal>
       )}
 
       {/* Create project modal */}

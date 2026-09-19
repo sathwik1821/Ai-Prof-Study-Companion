@@ -15,6 +15,7 @@ import MaterialsPage from './pages/MaterialsPage'
 import AnalyticsPage from './pages/AnalyticsPage'
 import AdminPage from './pages/AdminPage'
 import LoadingScreen from './components/LoadingScreen'
+import ProfilePage from './pages/ProfilePage'
 
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth()
@@ -67,6 +68,7 @@ export default function App() {
             <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="dashboard"                           element={<DashboardPage />} />
             <Route path="analytics"                           element={<AnalyticsPage />} />
+            <Route path="profile"                             element={<ProfilePage />} />
             <Route path="admin"  element={<AdminRoute><AdminPage /></AdminRoute>} />
             <Route path="spaces/:spaceId"                     element={<SpacePage />} />
             <Route path="spaces/:spaceId/projects/:projectId" element={<ProjectPage />} />

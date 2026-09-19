@@ -3,9 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { projectsApi, recommendationsApi, materialsApi, masteryApi } from '../api'
 import {
   ArrowLeft, Brain, BarChart2, Upload, BookOpen, Target, Zap,
-  CheckCircle, XCircle, TrendingUp, ChevronRight, AlertTriangle, Activity
+  CheckCircle, XCircle, TrendingUp, ChevronRight, AlertTriangle, Activity, Pencil
 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import Modal from '../components/Modal'
 import './ProjectPage.css'
 
 export default function ProjectPage() {
@@ -17,6 +18,9 @@ export default function ProjectPage() {
   const [recs,     setRecs]     = useState([])
   const [masteries, setMasteries] = useState([])
   const [loading,  setLoading]  = useState(true)
+  const [showEditProject, setShowEditProject] = useState(false)
+  const [editProjForm, setEditProjForm] = useState({ name: '', description: '', learningGoal: '' })
+  const [savingEdit, setSavingEdit] = useState(false)
 
   useEffect(() => {
     Promise.all([
@@ -51,6 +55,24 @@ export default function ProjectPage() {
     if (rec.type === 'TUTOR')  navigate(`/spaces/${spaceId}/projects/${projectId}/tutor`)
     if (rec.type === 'QUIZ')   navigate(`/spaces/${spaceId}/projects/${projectId}/quiz`)
     if (rec.type === 'UPLOAD') navigate(`/spaces/${spaceId}/projects/${projectId}/materials`)
+  }
+
+  const openEditProject = () => {
+    setEditProjForm({ name: project?.name || '', description: project?.description || '', learningGoal: project?.learningGoal || '' })
+    setShowEditProject(true)
+  }
+
+  const saveEditProject = async (e) => {
+    e.preventDefault()
+    if (!editProjForm.name.trim()) return
+    setSavingEdit(true)
+    try {
+      const res = await projectsApi.update(projectId, editProjForm)
+      setProject(res.data.data)
+      setShowEditProject(false)
+      toast.success('Project updated!')
+    } catch { toast.error('Failed to update project') }
+    finally { setSavingEdit(false) }
   }
 
   if (loading) return (
@@ -93,6 +115,9 @@ export default function ProjectPage() {
         </div>
         {/* Quick nav */}
         <div className="proj-quick-nav">
+          <button className="btn btn-ghost btn-sm" onClick={openEditProject}>
+            <Pencil size={13}/> Edit
+          </button>
           <button className="btn btn-secondary" onClick={() => navigate(`/spaces/${spaceId}/projects/${projectId}/materials`)}>
             <Upload size={15}/> Materials
           </button>
@@ -270,6 +295,49 @@ export default function ProjectPage() {
         )}
       </div>
     </div>
+
+      {/* Edit project modal */}
+      {showEditProject && (
+        <Modal title="Edit Project" onClose={() => setShowEditProject(false)}>
+          <form onSubmit={saveEditProject}>
+            <div style={{display:'flex',flexDirection:'column',gap:14}}>
+              <div className="form-group">
+                <label className="input-label">Project name *</label>
+                <input
+                  className="input"
+                  value={editProjForm.name}
+                  onChange={e => setEditProjForm(v => ({...v, name: e.target.value}))}
+                  required autoFocus
+                />
+              </div>
+              <div className="form-group">
+                <label className="input-label">Description</label>
+                <textarea
+                  className="input"
+                  rows={2}
+                  value={editProjForm.description}
+                  onChange={e => setEditProjForm(v => ({...v, description: e.target.value}))}
+                />
+              </div>
+              <div className="form-group">
+                <label className="input-label">Learning Goal</label>
+                <input
+                  className="input"
+                  value={editProjForm.learningGoal}
+                  onChange={e => setEditProjForm(v => ({...v, learningGoal: e.target.value}))}
+                  placeholder="e.g. Understand backpropagation from scratch"
+                />
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button type="button" className="btn btn-secondary" onClick={() => setShowEditProject(false)}>Cancel</button>
+              <button type="submit" className="btn btn-primary" disabled={savingEdit}>
+                {savingEdit ? <span className="spinner" style={{width:16,height:16}}/> : 'Save Changes'}
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
   )
 }
 

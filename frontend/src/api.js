@@ -194,3 +194,11 @@ export const adminApi = {
   usage:    () => api.get('/admin/usage'),
   jobs:     () => api.get('/admin/jobs'),
 }
+
+// ── User Profile ──────────────────────────────────────────
+export const userApi = {
+  getProfile:     ()     => api.get('/users/profile'),
+  updateProfile:  (data) => api.patch('/users/profile', data),
+  changePassword: (data) => api.post('/users/change-password', data),
+}
+
