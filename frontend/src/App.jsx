@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
+import toast from 'react-hot-toast'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
@@ -29,6 +30,17 @@ function PublicRoute({ children }) {
   return children
 }
 
+function AdminRoute({ children }) {
+  const { user, loading } = useAuth()
+  if (loading) return <LoadingScreen />
+  if (!user) return <Navigate to="/login" replace />
+  if (user.role !== 'ADMIN') {
+    toast.error('Access denied — Admin only')
+    return <Navigate to="/dashboard" replace />
+  }
+  return children
+}
+
 export default function App() {
   return (
     <AuthProvider>
@@ -55,7 +67,7 @@ export default function App() {
             <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="dashboard"                           element={<DashboardPage />} />
             <Route path="analytics"                           element={<AnalyticsPage />} />
-            <Route path="admin"                               element={<AdminPage />} />
+            <Route path="admin"  element={<AdminRoute><AdminPage /></AdminRoute>} />
             <Route path="spaces/:spaceId"                     element={<SpacePage />} />
             <Route path="spaces/:spaceId/projects/:projectId" element={<ProjectPage />} />
             <Route path="spaces/:spaceId/projects/:projectId/tutor"     element={<TutorPage />} />

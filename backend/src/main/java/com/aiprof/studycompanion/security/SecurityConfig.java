@@ -46,8 +46,8 @@ public class SecurityConfig {
                                 "/api/auth/resend-otp"
                         ).permitAll()
                         .requestMatchers("/actuator/health").permitAll()
-                        // Admin / Observability endpoints
-                        .requestMatchers("/api/admin/**").authenticated()
+                        // Admin endpoints — ADMIN role only
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         // All other API endpoints require authentication
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().permitAll()

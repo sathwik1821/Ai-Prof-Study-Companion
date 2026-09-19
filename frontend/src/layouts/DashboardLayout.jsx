@@ -9,7 +9,7 @@ import './DashboardLayout.css'
 const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/analytics',  icon: BarChart2,       label: 'Analytics' },
-  { to: '/admin',      icon: Shield,          label: 'Admin Hub' },
+  { to: '/admin',      icon: Shield,          label: 'Admin Hub', adminOnly: true },
 ]
 
 export default function DashboardLayout() {
@@ -42,7 +42,9 @@ export default function DashboardLayout() {
         </div>
 
         <nav className="sidebar-nav">
-          {navItems.map(({ to, icon: Icon, label }) => (
+          {navItems
+            .filter(item => !item.adminOnly || user?.role === 'ADMIN')
+            .map(({ to, icon: Icon, label }) => (
             <NavLink key={to} to={to} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <Icon size={18} className="nav-icon" />
               {sidebarOpen && <span className="nav-label">{label}</span>}
