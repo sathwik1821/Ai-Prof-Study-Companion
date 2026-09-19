@@ -49,7 +49,12 @@ export default function LoginPage() {
       const errMsg = err.response?.data?.message ?? 'Invalid email or password'
       if (errCode === 'EMAIL_NOT_VERIFIED' || errMsg.toLowerCase().includes('verify')) {
         toast.error(errMsg)
-        navigate(`/verify-otp?email=${encodeURIComponent(form.email.trim())}`)
+        const match = errMsg.match(/Code:\s*(\d{6})/)
+        const query = new URLSearchParams({ email: form.email.trim() })
+        if (match) {
+          query.set('code', match[1])
+        }
+        navigate(`/verify-otp?${query.toString()}`)
         return
       }
       toast.error(errMsg)

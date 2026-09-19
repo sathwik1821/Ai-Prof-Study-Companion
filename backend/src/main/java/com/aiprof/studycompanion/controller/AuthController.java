@@ -48,11 +48,14 @@ public class AuthController {
     }
 
     @PostMapping("/resend-otp")
-    public ResponseEntity<ApiResponse<Void>> resendOtp(
+    public ResponseEntity<ApiResponse<java.util.Map<String, String>>> resendOtp(
             @Valid @RequestBody ResendOtpRequest request
     ) {
-        authService.resendOtp(request);
-        return ResponseEntity.ok(ApiResponse.success(null, "A new verification code has been sent to your email"));
+        String otp = authService.resendOtp(request);
+        return ResponseEntity.ok(ApiResponse.success(
+                java.util.Map.of("previewOtp", otp),
+                "A new verification code has been sent to your email"
+        ));
     }
 
     @PostMapping("/login")

@@ -43,7 +43,7 @@ export function AuthProvider({ children }) {
       if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken)
       setUser(data.user)
     }
-    return data?.user
+    return data
   }
 
   const verifyOtp = async (email, otp) => {

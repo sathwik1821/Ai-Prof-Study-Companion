@@ -27,8 +27,11 @@ const FLOATING_DOTS = Array.from({ length: 14 }, (_, i) => ({
 export default function OtpVerifyPage() {
   const [searchParams] = useSearchParams()
   const initialEmail = searchParams.get('email') || ''
+  const initialCode = searchParams.get('code') || ''
   
   const [email, setEmail] = useState(initialEmail)
+  const [quickCode, setQuickCode] = useState(initialCode)
+  const [isEditingEmail, setIsEditingEmail] = useState(false)
   const [otp, setOtp] = useState(['', '', '', '', '', ''])
   const [loading, setLoading] = useState(false)
   const [resending, setResending] = useState(false)
@@ -93,12 +96,18 @@ export default function OtpVerifyPage() {
     }
     setOtp(newOtp)
 
-    const nextEmptyIndex = newOtp.findIndex(val => !val)
-    if (nextEmptyIndex !== -1) {
-      inputRefs.current[nextEmptyIndex]?.focus()
-    } else {
-      inputRefs.current[5]?.focus()
-    }
+    const focusIdx = Math.min(pastedData.length, 5)
+    inputRefs.current[focusIdx]?.focus()
+  }
+
+  const handleAutoFill = (codeToFill) => {
+    if (!codeToFill) return
+    const digits = codeToFill.replace(/\D/g, '').slice(0, 6).split('')
+    const newOtp = ['', '', '', '', '', '']
+    digits.forEach((d, i) => { newOtp[i] = d })
+    setOtp(newOtp)
+    inputRefs.current[5]?.focus()
+    toast.success('Verification code filled!')
   }
 
   const handleVerify = async (e) => {
@@ -133,8 +142,12 @@ export default function OtpVerifyPage() {
 
     setResending(true)
     try {
-      await authApi.resendOtp({ email: email.trim() })
+      const res = await authApi.resendOtp({ email: email.trim() })
       toast.success('A new verification code has been sent to your email!')
+      const newCode = res.data?.data?.previewOtp
+      if (newCode) {
+        setQuickCode(newCode)
+      }
       setCountdown(60)
       setCanResend(false)
       setOtp(['', '', '', '', '', ''])
@@ -199,35 +212,95 @@ export default function OtpVerifyPage() {
             <p className="auth-form-subtitle" style={{ fontSize: 13.5, color: '#94a3b8', lineHeight: 1.6 }}>
               We sent a 6-digit security code to
             </p>
-            {email ? (
-              <div 
-                style={{ 
-                  display: 'inline-flex', 
-                  alignItems: 'center', 
-                  gap: 6,
-                  marginTop: 6,
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid rgba(255, 255, 255, 0.12)',
-                  padding: '5px 14px',
-                  borderRadius: 999,
-                  color: '#f8fafc',
-                  fontSize: 13,
-                  fontWeight: 600
-                }}
-              >
-                <Mail size={13} color="#60a5fa" />
-                {email}
+            {email && !isEditingEmail ? (
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
+                <div 
+                  style={{ 
+                    display: 'inline-flex', 
+                    alignItems: 'center', 
+                    gap: 6,
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    padding: '5px 14px',
+                    borderRadius: 999,
+                    color: '#f8fafc',
+                    fontSize: 13,
+                    fontWeight: 600
+                  }}
+                >
+                  <Mail size={13} color="#60a5fa" />
+                  {email}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsEditingEmail(true)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#60a5fa',
+                    fontSize: 12,
+                    cursor: 'pointer',
+                    textDecoration: 'underline'
+                  }}
+                >
+                  Change
+                </button>
               </div>
             ) : (
-              <div style={{ marginTop: 12 }}>
+              <div style={{ marginTop: 12, display: 'flex', gap: 8, justifyContent: 'center' }}>
                 <input
                   type="email"
                   placeholder="Enter your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="auth-input"
-                  style={{ textAlign: 'center', maxWidth: 300, margin: '0 auto' }}
+                  style={{ textAlign: 'center', maxWidth: 280 }}
                 />
+                {isEditingEmail && (
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingEmail(false)}
+                    className="auth-btn auth-btn-secondary"
+                    style={{ padding: '6px 12px', fontSize: 12 }}
+                  >
+                    Done
+                  </button>
+                )}
+              </div>
+            )}
+
+            {quickCode && (
+              <div style={{ marginTop: 14 }}>
+                <div 
+                  onClick={() => handleAutoFill(quickCode)}
+                  style={{ 
+                    display: 'inline-flex', 
+                    alignItems: 'center', 
+                    gap: 8,
+                    background: 'rgba(59, 130, 246, 0.15)',
+                    border: '1px solid rgba(59, 130, 246, 0.4)',
+                    padding: '7px 16px',
+                    borderRadius: 10,
+                    color: '#93c5fd',
+                    fontSize: 13,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    boxShadow: '0 4px 12px rgba(59, 130, 246, 0.15)'
+                  }}
+                  title="Click to automatically fill code"
+                >
+                  <span>⚡ Code: <strong style={{ color: '#fff', letterSpacing: 2, fontFamily: 'monospace' }}>{quickCode}</strong></span>
+                  <span style={{ 
+                    background: '#2563eb', 
+                    color: '#fff', 
+                    fontSize: 11, 
+                    fontWeight: 700, 
+                    padding: '2px 8px', 
+                    borderRadius: 6 
+                  }}>
+                    Click to auto-fill
+                  </span>
+                </div>
               </div>
             )}
           </div>

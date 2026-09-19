@@ -85,11 +85,12 @@ public class AuthService {
 
         user.setEmailVerified(false);
         user = userRepository.save(user);
-        generateAndSendOtp(user);
+        String otp = generateAndSendOtp(user);
         log.info("New registration created, OTP verification code dispatched to: {}", user.getEmail());
 
         return AuthResponse.builder()
                 .user(userService.toDto(user))
+                .previewOtp(otp)
                 .build();
     }
 
@@ -125,7 +126,7 @@ public class AuthService {
     }
 
     @Transactional
-    public void resendOtp(ResendOtpRequest request) {
+    public String resendOtp(ResendOtpRequest request) {
         String email = request.getEmail().toLowerCase().trim();
         User user = userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> AppException.notFound("User", email));
@@ -142,8 +143,9 @@ public class AuthService {
             }
         }
 
-        generateAndSendOtp(user);
+        String otp = generateAndSendOtp(user);
         log.info("Resent OTP verification code to: {}", user.getEmail());
+        return otp;
     }
 
     @Transactional
@@ -157,9 +159,9 @@ public class AuthService {
         }
 
         if (!user.isEmailVerified()) {
-            generateAndSendOtp(user);
+            String otp = generateAndSendOtp(user);
             log.info("Unverified user {} attempted login. Generated and dispatched fresh OTP to email.", user.getEmail());
-            throw new AppException(HttpStatus.FORBIDDEN, "EMAIL_NOT_VERIFIED", "Please verify your email address. A 6-digit verification code has been sent to your inbox.");
+            throw new AppException(HttpStatus.FORBIDDEN, "EMAIL_NOT_VERIFIED", "Please verify your email address. A 6-digit verification code has been sent to your inbox. Code: " + otp);
         }
 
         log.info("User logged in: {}", user.getEmail());
@@ -258,13 +260,14 @@ public class AuthService {
         log.info("Logout processed for userId: {}", userId);
     }
 
-    private void generateAndSendOtp(User user) {
+    private String generateAndSendOtp(User user) {
         int code = 100000 + RANDOM.nextInt(900000);
         String otpStr = String.valueOf(code);
         user.setOtpCode(otpStr);
         user.setOtpExpiresAt(Instant.now().plus(10, ChronoUnit.MINUTES));
         userRepository.save(user);
         emailService.sendOtpEmail(user.getEmail(), otpStr, user.getFullName());
+        return otpStr;
     }
 
     private AuthResponse buildAuthResponse(User user) {

@@ -100,6 +100,13 @@ app:
     retrieval-top-k: 6      # number of chunks to retrieve
 
   # ============================================================
+  # Email Delivery Configuration (HTTP REST API / Resend)
+  # ============================================================
+  mail:
+    resend-api-key: ${RESEND_API_KEY:}
+    resend-from: ${RESEND_FROM:AiProf <onboarding@resend.dev>}
+
+  # ============================================================
   # Background Jobs
   # ============================================================
   jobs:
